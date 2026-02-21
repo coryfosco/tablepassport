@@ -1,0 +1,2987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TablePassport — Business & Personal Dining, Perfected</title>
+<meta name="description" content="TablePassport: AI-curated restaurant recommendations for business travelers and serious food lovers. Accessible, multilingual, service animal friendly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/opendyslexic">
+<style>
+/* ══════════════════════════════════════════
+   TOKENS — two palette sets, one per mode
+══════════════════════════════════════════ */
+:root {
+  /* Shared */
+  --ink:        #0f0d0a;
+  --cream:      #f7f3ec;
+  --warm-gray:  #6b6055;
+  --mid-gray:   #9a9085;
+  --card-bg:    #faf7f1;
+  --border:     rgba(184,149,74,.18);
+  --focus-ring: #1a5fa8;
+  --shadow:     0 2px 20px rgba(15,13,10,.07);
+
+  /* Business mode palette */
+  --biz-primary:  #1a2f4e;
+  --biz-accent:   #b8954a;
+  --biz-hot:      #b85540;
+  --biz-sage:     #4e7a42;
+
+  /* Personal mode palette */
+  --per-primary:  #6b2d5e;
+  --per-accent:   #c9845a;
+  --per-hot:      #a63d5a;
+  --per-sage:     #5a7a6e;
+
+  /* Active (switches with mode) */
+  --primary:  var(--biz-primary);
+  --accent:   var(--biz-accent);
+  --hot:      var(--biz-hot);
+  --sage:     var(--biz-sage);
+}
+
+body.mode-personal {
+  --primary: var(--per-primary);
+  --accent:  var(--per-accent);
+  --hot:     var(--per-hot);
+  --sage:    var(--per-sage);
+  --border:  rgba(201,132,90,.2);
+}
+
+body.high-contrast {
+  --ink:#000; --cream:#fff; --warm-gray:#333; --mid-gray:#555;
+  --card-bg:#f0f0f0; --border:#000; --focus-ring:#00f;
+  --primary:#000080; --accent:#7a5a00; --hot:#8b0000; --sage:#145214;
+}
+body.high-contrast .hero-bg,
+body.high-contrast .hero-ring { display:none !important; }
+body.large-text { font-size:1.18rem !important; }
+body.large-text label,.large-text .chip,.large-text input,
+.large-text select,.large-text p { font-size:1.05rem !important; }
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--cream); color:var(--ink);
+  font-family:'DM Sans',sans-serif; font-size:1rem;
+  line-height:1.6; overflow-x:hidden;
+  transition: --primary .4s, --accent .4s;
+}
+*:focus-visible { outline:3px solid var(--focus-ring); outline-offset:3px; }
+
+.skip-link {
+  position:absolute; top:-100px; left:1rem;
+  background:var(--focus-ring); color:#fff;
+  padding:.6rem 1.2rem; font-size:.88rem; font-weight:600;
+  text-decoration:none; z-index:9999; transition:top .2s;
+}
+.skip-link:focus { top:.75rem; }
+#aria-live { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+/* ══════════════════════════════════════════
+   A11Y BAR
+══════════════════════════════════════════ */
+.a11y-bar {
+  position:fixed; top:0; left:0; right:0; z-index:900;
+  background:var(--primary); display:flex; align-items:center;
+  justify-content:space-between; padding:.45rem 1.5rem;
+  flex-wrap:wrap; gap:.5rem; transition:background .4s;
+}
+.a11y-left { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+.a11y-label { font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.5); font-weight:500; }
+.a11y-btn {
+  background:transparent; border:1px solid rgba(255,255,255,.25); color:#fff;
+  padding:.28rem .75rem; font-family:'DM Sans',sans-serif; font-size:.75rem;
+  cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:.35rem;
+  letter-spacing:.04em; white-space:nowrap;
+}
+.a11y-btn:hover,.a11y-btn[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--ink); }
+.lang-select {
+  background:transparent; border:1px solid rgba(255,255,255,.25); color:#fff;
+  padding:.28rem 1.6rem .28rem .6rem; font-family:'DM Sans',sans-serif;
+  font-size:.75rem; cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right .45rem center;
+}
+.lang-select option { background:#1a2f4e; color:#fff; }
+
+/* ══════════════════════════════════════════
+   MODE TOGGLE  ← the hero feature of v4
+══════════════════════════════════════════ */
+.mode-bar {
+  position:fixed; top:36px; left:0; right:0; z-index:890;
+  display:flex; justify-content:center; padding:.5rem 1rem;
+  background:var(--cream); border-bottom:1px solid var(--border);
+  transition:background .4s;
+}
+body.mode-personal .mode-bar { background:#fdf6f9; }
+
+.mode-toggle {
+  display:flex; background:rgba(15,13,10,.07);
+  border-radius:2px; padding:3px; gap:2px;
+  position:relative;
+}
+.mode-btn {
+  padding:.55rem 1.75rem; border:none; background:transparent;
+  font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
+  color:var(--warm-gray); transition:all .3s; border-radius:1px;
+  display:flex; align-items:center; gap:.5rem; position:relative; z-index:1;
+  white-space:nowrap;
+}
+.mode-btn.active { color:#fff; }
+.mode-glider {
+  position:absolute; top:3px; bottom:3px;
+  background:var(--primary); border-radius:1px;
+  transition:left .3s cubic-bezier(.4,0,.2,1), width .3s, background .4s;
+  z-index:0;
+}
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+.hero {
+  position:relative; min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:8rem 2rem 3rem; overflow:hidden;
+}
+.hero-bg {
+  position:absolute; inset:0; pointer-events:none;
+  transition:opacity .6s;
+}
+.hero-bg-biz {
+  background:
+    radial-gradient(ellipse 80% 55% at 15% 20%, rgba(26,47,78,.1) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 85% 80%, rgba(184,85,64,.08) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 55% 45%, rgba(184,149,74,.08) 0%, transparent 60%);
+}
+.hero-bg-personal {
+  background:
+    radial-gradient(ellipse 80% 55% at 15% 20%, rgba(107,45,94,.1) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 85% 80%, rgba(201,132,90,.09) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 55% 45%, rgba(166,61,90,.07) 0%, transparent 60%);
+  opacity:0; transition:opacity .6s;
+}
+body.mode-personal .hero-bg-biz { opacity:0; }
+body.mode-personal .hero-bg-personal { opacity:1; }
+
+.hero-ring {
+  position:absolute; border-radius:50%;
+  border:1px solid rgba(184,149,74,.12);
+  animation:ring-pulse 7s ease-in-out infinite; pointer-events:none;
+  transition:border-color .4s;
+}
+body.mode-personal .hero-ring { border-color:rgba(201,132,90,.12); }
+.hero-ring:nth-child(1) { width:600px; height:600px; top:-200px; left:-200px; }
+.hero-ring:nth-child(2) { width:360px; height:360px; bottom:-100px; right:-100px; animation-delay:2.5s; }
+.hero-ring:nth-child(3) { width:240px; height:240px; top:38%; right:4%; animation-delay:5s; }
+@keyframes ring-pulse { 0%,100%{opacity:.22;transform:scale(1)} 50%{opacity:.5;transform:scale(1.05)} }
+
+.tp-wordmark {
+  font-family:'Cormorant Garamond',serif; font-size:.78rem; font-weight:300;
+  letter-spacing:.42em; text-transform:uppercase; color:var(--accent);
+  margin-bottom:1.6rem; display:flex; align-items:center; gap:.9rem;
+  animation:fadeDown .8s ease both; transition:color .4s;
+}
+.tp-wordmark::before,.tp-wordmark::after { content:''; width:32px; height:1px; background:var(--accent); opacity:.5; transition:background .4s; }
+
+/* Hero headlines — two sets, crossfade */
+.hero-headline-wrap {
+  position: relative;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+/* Both headlines occupy the same grid cell so they overlap for the crossfade,
+   but the wrapper is sized by the taller of the two via an invisible spacer */
+.hero-h1 {
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.4rem,7vw,5.8rem); font-weight:300; line-height:1.08; color:var(--ink);
+  text-align:center;
+  grid-row: 1; grid-column: 1;
+  transition:opacity .5s, transform .5s;
+}
+.hero-h1 em { font-style:italic; color:var(--hot); transition:color .4s; }
+.hero-h1 strong { font-weight:600; color:var(--primary); transition:color .4s; }
+.hero-h1.biz-headline { opacity:1; transform:translateY(0); }
+.hero-h1.per-headline { opacity:0; transform:translateY(10px); pointer-events:none; }
+body.mode-personal .hero-h1.biz-headline { opacity:0; transform:translateY(-10px); pointer-events:none; }
+body.mode-personal .hero-h1.per-headline { opacity:1; transform:translateY(0); pointer-events:auto; }
+
+/* Subtitle crossfade — same grid trick */
+.hero-sub-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  margin-top: 1.5rem;
+  display: grid;
+  place-items: center;
+}
+.hero-sub-biz, .hero-sub-per {
+  grid-row: 1; grid-column: 1;
+  text-align:center; font-size:1rem; font-weight:300;
+  color:var(--warm-gray); line-height:1.75; max-width:560px;
+  transition:opacity .4s, transform .4s;
+}
+.hero-sub-biz { opacity:1; transform:translateY(0); }
+.hero-sub-per { opacity:0; transform:translateY(8px); pointer-events:none; }
+body.mode-personal .hero-sub-biz { opacity:0; transform:translateY(-8px); pointer-events:none; }
+body.mode-personal .hero-sub-per { opacity:1; transform:translateY(0); pointer-events:auto; }
+
+.pillars {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; margin-top:1.6rem;
+  animation:fadeUp .9s .3s ease both;
+}
+.pillar {
+  display:flex; align-items:center; gap:.4rem;
+  background:rgba(255,255,255,.55); border:1px solid var(--border);
+  padding:.32rem .85rem; font-size:.76rem; color:var(--warm-gray);
+  backdrop-filter:blur(4px);
+}
+
+.hero-cta { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; margin-top:2.2rem; animation:fadeUp .9s .4s ease both; }
+.btn-primary { padding:.9rem 2.2rem; background:var(--primary); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; transition:background .4s; }
+.btn-primary:hover { filter:brightness(1.15); }
+.btn-outline { padding:.9rem 2.2rem; background:transparent; border:1px solid var(--ink); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; transition:all .3s; }
+.btn-outline:hover { background:var(--ink); color:var(--cream); }
+
+.scroll-line { width:1px; height:36px; background:linear-gradient(to bottom,var(--accent),transparent); margin:2.5rem auto 0; animation:scroll-anim 2s ease-in-out infinite; transition:background .4s; }
+@keyframes scroll-anim { 0%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} 51%{transform:scaleY(1);transform-origin:bottom} 100%{transform:scaleY(0);transform-origin:bottom} }
+
+/* ══════════════════════════════════════════
+   FINDER
+══════════════════════════════════════════ */
+#finder { padding:5rem 1.5rem 2rem; max-width:960px; margin:0 auto; }
+.section-header { text-align:center; margin-bottom:3rem; }
+.eyebrow { font-family:'Cormorant Garamond',serif; font-size:.78rem; letter-spacing:.32em; text-transform:uppercase; color:var(--accent); margin-bottom:.9rem; transition:color .4s; }
+.section-header h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(1.7rem,4vw,2.8rem); font-weight:300; line-height:1.2; }
+.section-header h2 em { font-style:italic; color:var(--hot); transition:color .4s; }
+
+/* Form shell */
+.form-shell {
+  background:var(--card-bg); border:1px solid var(--border); position:relative; overflow:hidden;
+}
+.form-shell::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,var(--primary) 0%,var(--accent) 50%,var(--hot) 100%);
+  transition:background .4s;
+}
+
+/* Tabs */
+.tab-nav { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+.tab-nav::-webkit-scrollbar { display:none; }
+.tab-btn {
+  flex:0 0 auto; padding:.95rem 1.4rem; background:transparent; border:none;
+  font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:500;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--mid-gray);
+  cursor:pointer; transition:all .2s; border-bottom:2px solid transparent;
+  margin-bottom:-1px; display:flex; align-items:center; gap:.4rem; white-space:nowrap;
+}
+.tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); transition:color .4s, border-color .4s; }
+.tab-dot { width:6px; height:6px; border-radius:50%; background:var(--mid-gray); transition:background .2s; }
+.tab-btn.active .tab-dot { background:var(--hot); }
+.tab-btn.filled .tab-dot { background:var(--sage); }
+
+.tab-panels { padding:2.5rem 2.5rem 1.5rem; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* Grid helpers */
+.fg { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+.fg3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; }
+.fg-full { grid-column:1/-1; }
+.form-group { display:flex; flex-direction:column; gap:.45rem; }
+
+label { font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--warm-gray); font-weight:600; }
+.hint { font-size:.72rem; color:var(--mid-gray); font-style:italic; text-transform:none; letter-spacing:0; font-weight:300; }
+
+input[type="text"],select {
+  background:#fff; border:1px solid rgba(15,13,10,.13);
+  padding:.78rem .9rem; font-family:'DM Sans',sans-serif;
+  font-size:.92rem; color:var(--ink); width:100%; appearance:none; outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+input:focus,select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(184,149,74,.12); }
+select {
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%236b6055' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right .9rem center; padding-right:2.4rem; cursor:pointer;
+}
+
+/* Chips */
+.chip-row { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.2rem; }
+.chip {
+  padding:.4rem .9rem; border:1px solid rgba(15,13,10,.14);
+  font-size:.8rem; font-family:'DM Sans',sans-serif;
+  cursor:pointer; transition:all .18s; color:var(--warm-gray);
+  background:#fff; user-select:none; display:flex; align-items:center; gap:.3rem;
+}
+.chip:hover { border-color:var(--accent); color:var(--ink); }
+.chip.selected { background:var(--primary); color:#fff; border-color:var(--primary); transition:background .4s, border-color .4s; }
+
+/* Toggles */
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:.6rem .8rem; background:#fff; border:1px solid rgba(15,13,10,.1); }
+.toggle-left { display:flex; flex-direction:column; }
+.tl-main { font-size:.82rem; font-weight:500; color:var(--ink); }
+.tl-sub { font-size:.72rem; color:var(--mid-gray); }
+.toggle-sw { position:relative; width:40px; height:22px; flex-shrink:0; }
+.toggle-sw input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track { position:absolute; inset:0; background:#ddd; border-radius:22px; cursor:pointer; transition:background .2s; }
+.toggle-track::before { content:''; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+.toggle-sw input:checked + .toggle-track { background:var(--primary); }
+.toggle-sw input:checked + .toggle-track::before { transform:translateX(18px); }
+.toggle-sw input:focus + .toggle-track { outline:3px solid var(--focus-ring); outline-offset:2px; }
+
+/* Slider */
+.range-group { display:flex; flex-direction:column; gap:.5rem; }
+.range-labels { display:flex; justify-content:space-between; font-size:.7rem; color:var(--mid-gray); }
+.range-val { text-align:center; font-size:.8rem; font-weight:600; color:var(--primary); margin-top:.2rem; transition:color .4s; }
+input[type="range"] {
+  -webkit-appearance:none; width:100%; height:4px; border-radius:2px;
+  outline:none; padding:0; border:none; box-shadow:none;
+  background:linear-gradient(to right, var(--sage) 0%, var(--accent) 50%, var(--hot) 100%);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:18px; height:18px;
+  background:var(--primary); border-radius:50%; cursor:pointer;
+  border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.2); transition:background .4s;
+}
+
+/* ══ PERSONAL MODE SECTIONS ══ */
+.foodie-section {
+  background:linear-gradient(135deg,rgba(107,45,94,.04) 0%,rgba(201,132,90,.04) 100%);
+  border:1px solid rgba(107,45,94,.15); padding:1.5rem; margin-top:.5rem;
+}
+.foodie-header { display:flex; align-items:center; gap:.75rem; margin-bottom:1.2rem; }
+.foodie-icon { font-size:1.5rem; }
+.foodie-header h4 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:400; }
+.foodie-header p { font-size:.76rem; color:var(--warm-gray); margin-top:.15rem; }
+
+/* ══ ACCESS SECTION ══ */
+.access-section { background:rgba(78,122,66,.05); border:1px solid rgba(78,122,66,.2); padding:1.5rem; }
+.access-header { display:flex; align-items:flex-start; gap:.75rem; margin-bottom:1.2rem; }
+.access-icon-big { font-size:1.5rem; }
+.access-header-text h4 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:400; }
+.access-header-text p { font-size:.76rem; color:var(--warm-gray); margin-top:.15rem; line-height:1.5; }
+.access-grid { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+.access-item { display:flex; align-items:flex-start; gap:.65rem; background:#fff; border:1px solid rgba(15,13,10,.09); padding:.75rem; cursor:pointer; transition:border-color .2s; }
+.access-item:hover { border-color:var(--sage); }
+.access-item input[type="checkbox"] { width:17px; height:17px; min-width:17px; margin-top:2px; accent-color:var(--sage); cursor:pointer; }
+.ai-title { font-size:.82rem; font-weight:600; color:var(--ink); display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+.ai-desc { font-size:.73rem; color:var(--mid-gray); margin-top:.12rem; line-height:1.45; }
+.tag-new { font-size:.58rem; background:var(--sage); color:#fff; padding:.1rem .4rem; letter-spacing:.07em; text-transform:uppercase; }
+.tag-v { font-size:.58rem; background:#2d6fa3; color:#fff; padding:.1rem .4rem; letter-spacing:.07em; text-transform:uppercase; }
+
+/* Tab controls */
+.tab-controls { display:flex; justify-content:space-between; align-items:center; padding:1.5rem 2.5rem 2rem; border-top:1px solid var(--border); margin-top:1rem; }
+.prog-dots { display:flex; gap:.4rem; align-items:center; }
+.prog-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:background .2s; }
+.prog-dot.done { background:var(--sage); }
+.prog-dot.current { background:var(--primary); width:20px; border-radius:4px; transition:background .4s; }
+.btn-back { padding:.68rem 1.2rem; background:transparent; border:1px solid rgba(15,13,10,.18); color:var(--warm-gray); font-family:'DM Sans',sans-serif; font-size:.78rem; cursor:pointer; transition:all .2s; }
+.btn-back:hover { background:var(--ink); color:var(--cream); }
+.btn-next { padding:.68rem 1.6rem; background:var(--primary); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .4s; display:flex; align-items:center; gap:.5rem; }
+.btn-next:hover { filter:brightness(1.12); }
+.find-btn { padding:1rem 2.8rem; background:var(--hot); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.84rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; transition:background .4s; display:flex; align-items:center; gap:.7rem; }
+.find-btn:hover { background:var(--primary); }
+.find-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ══════════════════════════════════════════
+   RESULTS
+══════════════════════════════════════════ */
+#results { padding:0 1.5rem 5rem; max-width:960px; margin:0 auto; display:none; }
+
+.loading-state { text-align:center; padding:4rem 2rem; display:none; }
+.loading-state.active { display:block; }
+.load-icon { font-size:2.8rem; animation:stamp 1.6s ease-in-out infinite; display:block; }
+@keyframes stamp { 0%,100%{transform:translateY(0)rotate(-6deg);opacity:.35} 50%{transform:translateY(-10px)rotate(6deg);opacity:1} }
+.load-text { font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-style:italic; color:var(--warm-gray); margin-top:1.2rem; }
+.load-sub { font-size:.78rem; color:var(--mid-gray); margin-top:.4rem; }
+
+.results-header { text-align:center; margin:2rem 0 1.5rem; }
+.results-header h3 { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; }
+.results-header h3 em { font-style:italic; color:var(--hot); }
+.results-meta { display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap; margin-top:.65rem; }
+.rmeta { font-size:.75rem; color:var(--mid-gray); display:flex; align-items:center; gap:.3rem; }
+
+/* Mode ribbon on results */
+.mode-ribbon {
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.3rem .9rem; font-size:.72rem; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; color:#fff; background:var(--primary); margin-bottom:1rem;
+  transition:background .4s;
+}
+
+.r-cards { display:flex; flex-direction:column; gap:1.5rem; }
+.r-card {
+  background:var(--card-bg); border:1px solid var(--border); position:relative; overflow:hidden;
+  opacity:0; transform:translateY(22px); transition:opacity .5s,transform .5s;
+}
+.r-card.visible { opacity:1; transform:translateY(0); }
+.r-card:hover { border-color:var(--accent); box-shadow:var(--shadow); }
+.r-card-stripe { height:3px; background:linear-gradient(90deg,var(--primary),var(--accent)); transition:background .4s; }
+
+.r-card-body { padding:1.75rem 2rem 1.25rem; }
+.r-card-rank { display:inline-flex; align-items:center; gap:.4rem; font-size:.68rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; padding:.28rem .8rem; color:#fff; background:var(--primary); margin-bottom:1rem; transition:background .4s; }
+.r-card-rank.rank-gem { background:var(--sage); }
+.r-card-rank.rank-biz { background:#1a2f4e; }
+.r-card-rank.rank-per { background:var(--per-primary); }
+
+.r-name { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:400; line-height:1.15; }
+.r-name small { display:block; font-family:'DM Sans',sans-serif; font-size:.76rem; color:var(--mid-gray); font-weight:400; margin-top:.18rem; }
+.r-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:.9rem; }
+.badges { display:flex; flex-wrap:wrap; gap:.38rem; }
+.badge { padding:.22rem .6rem; border:1px solid; font-size:.69rem; letter-spacing:.07em; display:flex; align-items:center; gap:.25rem; white-space:nowrap; }
+.b-cuisine { border-color:var(--sage); color:var(--sage); }
+.b-price { border-color:var(--accent); color:var(--accent); }
+.b-vibe { border-color:var(--mid-gray); color:var(--mid-gray); }
+.b-local { border-color:var(--sage); color:var(--sage); background:rgba(78,122,66,.07); }
+.b-biz { border-color:#1a2f4e; color:#1a2f4e; background:rgba(26,47,78,.07); }
+.b-access { border-color:#2d6fa3; color:#2d6fa3; background:rgba(45,111,163,.06); }
+.b-foodie { border-color:var(--per-primary); color:var(--per-primary); background:rgba(107,45,94,.06); }
+.b-gem { border-color:var(--per-hot); color:var(--per-hot); background:rgba(166,61,90,.06); }
+
+.r-why { font-size:.9rem; color:var(--warm-gray); line-height:1.72; margin-bottom:.9rem; }
+
+/* Detail panels */
+.detail-panel { border-top:1px solid var(--border); padding:1rem 2rem; }
+.dp-title { font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; margin-bottom:.6rem; display:flex; align-items:center; gap:.4rem; }
+.dp-title.biz-color { color:#1a2f4e; }
+.dp-title.per-color { color:var(--per-primary); }
+.dp-title.acc-color { color:#2d6fa3; }
+.dp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.45rem; }
+.dp-item { font-size:.79rem; color:var(--warm-gray); display:flex; align-items:center; gap:.35rem; }
+.dp-yes { color:var(--sage); font-weight:600; }
+.dp-no { color:var(--hot); }
+.dp-col { display:flex; flex-direction:column; gap:.4rem; }
+.dp-row { font-size:.81rem; color:var(--warm-gray); display:flex; gap:.5rem; line-height:1.5; }
+.dp-row strong { color:var(--ink); white-space:nowrap; }
+
+.r-card-bottom { padding:.85rem 2rem 1.4rem; display:flex; flex-wrap:wrap; gap:1.2rem; }
+.must-order { flex:1; min-width:190px; background:rgba(184,149,74,.07); padding:.68rem .9rem; border-left:2px solid var(--accent); font-size:.82rem; transition:border-color .4s; }
+.must-order-lbl { font-size:.63rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:.18rem; transition:color .4s; }
+.pro-tip { flex:2; min-width:190px; font-size:.82rem; color:var(--warm-gray); display:flex; gap:.5rem; }
+
+/* Foodie extras */
+.foodie-card-extra { background:linear-gradient(135deg,rgba(107,45,94,.04),rgba(201,132,90,.04)); border-top:1px solid rgba(107,45,94,.1); padding:1rem 2rem; display:none; }
+.foodie-card-extra.show { display:block; }
+.fce-title { font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--per-primary); margin-bottom:.55rem; }
+.fce-body { font-size:.82rem; color:var(--warm-gray); line-height:1.6; }
+
+.r-card-actions { padding:0 2rem 1.25rem; display:flex; gap:.6rem; flex-wrap:wrap; }
+.btn-save,.btn-share-card {
+  padding:.42rem 1rem; background:transparent; border:1px solid var(--border);
+  font-family:'DM Sans',sans-serif; font-size:.74rem; font-weight:500;
+  cursor:pointer; color:var(--warm-gray); transition:all .2s;
+  display:flex; align-items:center; gap:.35rem;
+}
+.btn-save:hover,.btn-save.saved { background:var(--primary); color:#fff; border-color:var(--primary); }
+.btn-share-card:hover { background:var(--sage); color:#fff; border-color:var(--sage); }
+
+/* Saved panel + FAB */
+#saved-panel { position:fixed; right:0; top:0; bottom:0; width:320px; background:var(--cream); border-left:1px solid var(--border); z-index:800; transform:translateX(100%); transition:transform .3s ease; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,.1); }
+#saved-panel.open { transform:translateX(0); }
+.saved-hdr { padding:1.4rem 1.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--primary); color:#fff; transition:background .4s; }
+.saved-hdr h4 { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:300; }
+.saved-close { background:transparent; border:none; color:#fff; font-size:1.2rem; cursor:pointer; }
+.saved-body { flex:1; overflow-y:auto; padding:1.2rem; }
+.saved-empty { text-align:center; padding:3rem 1rem; color:var(--mid-gray); font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; }
+.saved-item { background:var(--card-bg); border:1px solid var(--border); padding:.8rem 1rem; margin-bottom:.55rem; }
+.si-name { font-family:'Cormorant Garamond',serif; font-size:.98rem; }
+.si-meta { font-size:.73rem; color:var(--mid-gray); margin-top:.15rem; }
+.si-mode { font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; padding:.1rem .4rem; color:#fff; background:var(--primary); display:inline-block; margin-top:.25rem; }
+.si-remove { font-size:.68rem; color:var(--hot); cursor:pointer; margin-top:.3rem; display:inline-block; }
+.saved-ftr { padding:.9rem 1.2rem; border-top:1px solid var(--border); }
+.btn-share-all { width:100%; padding:.65rem; background:var(--primary); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .4s; }
+.btn-share-all:hover { filter:brightness(1.12); }
+
+#saved-fab { position:fixed; bottom:2rem; right:2rem; z-index:700; background:var(--primary); color:#fff; border:none; width:54px; height:54px; border-radius:50%; font-size:1.1rem; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,.2); display:none; align-items:center; justify-content:center; transition:background .4s; }
+#saved-fab:hover { filter:brightness(1.12); }
+.fab-ct { position:absolute; top:-4px; right:-4px; background:var(--hot); color:#fff; border-radius:50%; width:20px; height:20px; font-size:.68rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+.reset-btn { display:block; margin:2.5rem auto 0; padding:.8rem 1.8rem; background:transparent; border:1px solid var(--ink); font-family:'DM Sans',sans-serif; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; color:var(--ink); transition:all .2s; }
+.reset-btn:hover { background:var(--ink); color:var(--cream); }
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+footer { border-top:1px solid var(--border); padding:2.5rem 2rem; text-align:center; color:var(--mid-gray); font-size:.75rem; }
+footer strong { font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--ink); font-weight:400; display:block; margin-bottom:.4rem; }
+.footer-a11y { margin-top:.55rem; font-size:.68rem; opacity:.6; }
+
+/* ══════════════════════════════════════════
+   MENU ACCESSIBILITY SPECTRUM TABLE
+══════════════════════════════════════════ */
+.menu-spectrum {
+  margin-top:.5rem; border:1px solid var(--border); overflow:hidden;
+}
+.menu-spectrum-title {
+  background:var(--primary); color:#fff; padding:.6rem 1rem;
+  font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  display:flex; align-items:center; gap:.5rem; transition:background .4s;
+}
+.spectrum-row {
+  display:grid; grid-template-columns:1fr 1fr auto;
+  gap:.5rem; padding:.55rem 1rem; align-items:center;
+  border-bottom:1px solid var(--border); background:#fff;
+  font-size:.78rem;
+}
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row:nth-child(even) { background:rgba(184,149,74,.04); }
+.spectrum-name { font-weight:500; color:var(--ink); display:flex; align-items:center; gap:.4rem; }
+.spectrum-who { color:var(--mid-gray); font-size:.73rem; }
+.spectrum-status {
+  font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  padding:.18rem .55rem; white-space:nowrap;
+}
+.status-verified { background:rgba(78,122,66,.12); color:var(--sage); }
+.status-unknown  { background:rgba(184,149,74,.12); color:var(--accent); }
+.status-auto     { background:rgba(45,111,163,.12); color:#2d6fa3; }
+.status-rare     { background:rgba(107,79,138,.12); color:#6b4f8a; }
+
+/* ══════════════════════════════════════════
+   MENU REQUEST MODAL
+══════════════════════════════════════════ */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(15,13,10,.55);
+  z-index:1100; display:flex; align-items:center; justify-content:center;
+  padding:1.5rem; opacity:0; pointer-events:none; transition:opacity .25s;
+}
+.modal-overlay.open { opacity:1; pointer-events:auto; }
+.modal {
+  background:var(--cream); max-width:540px; width:100%;
+  max-height:90vh; overflow-y:auto; position:relative;
+  transform:translateY(16px); transition:transform .25s;
+}
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal-header {
+  background:var(--primary); color:#fff; padding:1.25rem 1.5rem;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  transition:background .4s;
+}
+.modal-header h3 { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:300; line-height:1.3; }
+.modal-header p  { font-size:.75rem; opacity:.75; margin-top:.25rem; }
+.modal-close { background:transparent; border:none; color:#fff; font-size:1.3rem; cursor:pointer; line-height:1; padding:.2rem; flex-shrink:0; }
+.modal-body { padding:1.5rem; }
+.modal-section { margin-bottom:1.25rem; }
+.modal-section-title { font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--warm-gray); margin-bottom:.6rem; }
+
+.request-option {
+  display:flex; align-items:flex-start; gap:.75rem;
+  padding:.75rem; background:#fff; border:1px solid rgba(15,13,10,.1);
+  margin-bottom:.45rem; cursor:pointer; transition:border-color .2s;
+}
+.request-option:hover { border-color:var(--accent); }
+.request-option input[type="checkbox"] { width:17px; height:17px; min-width:17px; margin-top:2px; accent-color:var(--primary); }
+.ro-title { font-size:.84rem; font-weight:600; color:var(--ink); }
+.ro-desc  { font-size:.73rem; color:var(--mid-gray); margin-top:.1rem; line-height:1.4; }
+
+.need-chips { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
+.need-chip {
+  padding:.3rem .75rem; border:1px solid rgba(15,13,10,.15);
+  font-size:.76rem; cursor:pointer; color:var(--warm-gray);
+  background:#fff; transition:all .18s; font-family:'DM Sans',sans-serif;
+}
+.need-chip.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+.modal-date { width:100%; }
+.modal-notes { width:100%; min-height:60px; resize:vertical; font-family:'DM Sans',sans-serif; font-size:.88rem; }
+
+.modal-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap; }
+.btn-modal-cancel { padding:.65rem 1.25rem; background:transparent; border:1px solid rgba(15,13,10,.2); font-family:'DM Sans',sans-serif; font-size:.78rem; cursor:pointer; color:var(--warm-gray); transition:all .2s; }
+.btn-modal-cancel:hover { background:var(--ink); color:#fff; }
+.btn-modal-send { padding:.65rem 1.5rem; background:var(--primary); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .4s; }
+.btn-modal-send:hover { filter:brightness(1.12); }
+
+/* Email preview */
+.email-preview {
+  background:#f8f8f8; border:1px solid rgba(15,13,10,.12); padding:1rem;
+  font-family:monospace; font-size:.75rem; line-height:1.7; color:#333;
+  white-space:pre-wrap; max-height:260px; overflow-y:auto; margin-top:.75rem;
+  display:none;
+}
+.email-preview.show { display:block; }
+
+/* ══════════════════════════════════════════
+   RESTAURANT RESOURCE CENTER
+══════════════════════════════════════════ */
+#resource-center {
+  max-width:960px; margin:0 auto; padding:4rem 1.5rem;
+  border-top:1px solid var(--border);
+}
+.rc-header { text-align:center; margin-bottom:2.5rem; }
+.rc-header h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(1.6rem,3.5vw,2.5rem); font-weight:300; line-height:1.2; }
+.rc-header h2 em { font-style:italic; color:var(--hot); }
+.rc-header p { color:var(--warm-gray); font-size:.92rem; margin-top:.75rem; max-width:580px; margin-left:auto; margin-right:auto; line-height:1.7; }
+
+.rc-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem; }
+.rc-card {
+  background:var(--card-bg); border:1px solid var(--border); padding:1.5rem;
+  position:relative; transition:border-color .2s, box-shadow .2s;
+}
+.rc-card:hover { border-color:var(--accent); box-shadow:var(--shadow); }
+.rc-card-top { display:flex; align-items:center; gap:.75rem; margin-bottom:.9rem; }
+.rc-card-icon { font-size:1.5rem; }
+.rc-card-label { font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:.18rem .55rem; color:#fff; }
+.rc-free  { background:var(--sage); }
+.rc-low   { background:var(--accent); color:var(--ink) !important; }
+.rc-inst  { background:var(--primary); }
+.rc-tmpl  { background:var(--warm-gray); }
+.rc-card h4 { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:400; margin-bottom:.4rem; }
+.rc-card p  { font-size:.8rem; color:var(--warm-gray); line-height:1.6; margin-bottom:.75rem; }
+.rc-card .rc-meta { font-size:.72rem; color:var(--mid-gray); margin-bottom:.85rem; }
+.rc-link {
+  display:inline-flex; align-items:center; gap:.35rem;
+  font-size:.76rem; font-weight:600; color:var(--primary);
+  letter-spacing:.04em; text-decoration:none; cursor:pointer;
+  transition:color .2s; background:none; border:none; padding:0; font-family:'DM Sans',sans-serif;
+}
+.rc-link:hover { color:var(--hot); }
+
+.rc-register {
+  background:linear-gradient(135deg, var(--primary) 0%, #2a4a6e 100%);
+  padding:2rem; text-align:center; color:#fff;
+}
+.rc-register h3 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:300; margin-bottom:.6rem; }
+.rc-register p { font-size:.88rem; opacity:.85; max-width:480px; margin:0 auto 1.25rem; line-height:1.65; }
+.btn-register { padding:.85rem 2.2rem; background:var(--accent); color:var(--ink); border:none; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+.btn-register:hover { background:#fff; }
+
+/* ══════════════════════════════════════════
+   ABOUT SECTION
+══════════════════════════════════════════ */
+#about {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 5rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.about-mission {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 4.5rem;
+}
+.about-mission h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 1.25rem;
+}
+.about-mission h2 em { font-style: italic; color: var(--hot); }
+.about-mission h2 strong { font-weight: 600; color: var(--primary); }
+.about-mission p {
+  font-size: 1.05rem;
+  color: var(--warm-gray);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+/* Three-pillar row */
+.about-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 4.5rem;
+}
+.about-pillar {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.about-pillar:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.about-pillar::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.ap-biz::before   { background: var(--biz-primary); }
+.ap-food::before  { background: var(--per-hot); }
+.ap-access::before { background: var(--sage); }
+.about-pillar-icon { font-size: 2rem; margin-bottom: .85rem; display: block; }
+.about-pillar h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-weight: 400;
+  margin-bottom: .6rem;
+}
+.about-pillar p { font-size: .84rem; color: var(--warm-gray); line-height: 1.65; }
+
+/* Founder story */
+.founder-story {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+.founder-visual {
+  position: sticky;
+  top: 6rem;
+}
+.founder-emblem {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--primary) 0%, #2a4a72 100%);
+  position: relative;
+  overflow: hidden;
+}
+.founder-emblem::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(ellipse at 30% 30%, rgba(184,149,74,.25) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 70%, rgba(184,85,64,.15) 0%, transparent 60%);
+}
+.founder-city {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .72rem;
+  font-weight: 300;
+  letter-spacing: .45em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  position: relative;
+  z-index: 1;
+  margin-bottom: .5rem;
+}
+.founder-icon-pair {
+  font-size: 3.5rem;
+  position: relative;
+  z-index: 1;
+  line-height: 1;
+  margin-bottom: .5rem;
+  display: flex;
+  gap: .25rem;
+  align-items: flex-end;
+}
+.founder-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .82rem;
+  font-style: italic;
+  color: rgba(255,255,255,.65);
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 1.5rem;
+  line-height: 1.5;
+}
+.founder-since {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: .62rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+}
+
+/* Pull quote */
+.founder-quote {
+  border-left: 3px solid var(--accent);
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  background: rgba(184,149,74,.06);
+  transition: border-color .4s, background .4s;
+}
+.founder-quote p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.founder-quote cite {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .74rem;
+  font-style: normal;
+  color: var(--mid-gray);
+  margin-top: .5rem;
+  letter-spacing: .04em;
+}
+
+.founder-text h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 1.25rem;
+}
+.founder-text h3 em { font-style: italic; color: var(--hot); }
+.founder-text p {
+  font-size: .92rem;
+  color: var(--warm-gray);
+  line-height: 1.82;
+  margin-bottom: 1rem;
+}
+.founder-text p strong { color: var(--ink); font-weight: 600; }
+
+/* Founder credentials */
+.founder-creds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: 1.5rem;
+}
+.cred-badge {
+  padding: .32rem .85rem;
+  border: 1px solid var(--border);
+  font-size: .74rem;
+  color: var(--warm-gray);
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+/* Built for everyone CTA */
+.about-cta {
+  margin-top: 4rem;
+  background: linear-gradient(135deg, var(--primary) 0%, #2a4a72 60%, #1a3a5e 100%);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.about-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(184,149,74,.2) 0%, transparent 55%),
+              radial-gradient(ellipse at 80% 50%, rgba(184,85,64,.15) 0%, transparent 55%);
+  pointer-events: none;
+}
+.about-cta h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: .85rem;
+  position: relative;
+}
+.about-cta h3 em { font-style: italic; color: var(--gold-light, #e2cc94); }
+.about-cta p {
+  font-size: .92rem;
+  opacity: .85;
+  max-width: 520px;
+  margin: 0 auto 1.75rem;
+  line-height: 1.7;
+  position: relative;
+}
+.about-cta-btns {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+}
+.btn-cta-primary {
+  padding: .9rem 2.2rem;
+  background: var(--accent);
+  color: var(--ink);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-cta-primary:hover { background: #fff; }
+.btn-cta-secondary {
+  padding: .9rem 2.2rem;
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.4);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-cta-secondary:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.7); }
+
+@media(max-width: 680px) {
+  .about-pillars { grid-template-columns: 1fr; }
+  .founder-story { grid-template-columns: 1fr; gap: 2rem; }
+  .founder-visual { position: static; }
+  .founder-emblem { max-width: 240px; }
+  .about-cta { padding: 2rem 1.25rem; }
+}
+
+/* ══════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════ */
+body.dark-mode {
+  --ink:      #f0ece4;
+  --cream:    #1a1712;
+  --warm-gray:#a89f90;
+  --mid-gray: #7a7060;
+  --card-bg:  #231f1a;
+  --border:   rgba(184,149,74,.25);
+  --shadow:   0 2px 20px rgba(0,0,0,.4);
+  --primary:  #4a7ab5;
+  --accent:   #c9a84c;
+  --hot:      #d4705a;
+  --sage:     #6aab5e;
+}
+body.dark-mode .a11y-bar { background:#111; }
+body.dark-mode .mode-bar { background:#1a1712; border-color:rgba(184,149,74,.2); }
+body.dark-mode input,
+body.dark-mode select { background:#2a2520; color:var(--ink); border-color:rgba(255,255,255,.12); }
+body.dark-mode .chip,
+body.dark-mode .toggle-row,
+body.dark-mode .access-item,
+body.dark-mode .request-option { background:#2a2520; color:var(--warm-gray); border-color:rgba(255,255,255,.1); }
+body.dark-mode .chip.selected { background:var(--primary); color:#fff; }
+body.dark-mode .spectrum-row { background:#2a2520; }
+body.dark-mode .spectrum-row:nth-child(even) { background:#302b25; }
+body.dark-mode .modal { background:#1a1712; }
+body.dark-mode .email-preview { background:#111; color:#ccc; border-color:rgba(255,255,255,.1); }
+body.dark-mode .rc-card { background:#231f1a; }
+body.dark-mode .saved-item { background:#2a2520; }
+body.dark-mode .hero-bg-biz {
+  background:
+    radial-gradient(ellipse 80% 55% at 15% 20%, rgba(74,122,181,.12) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 85% 80%, rgba(212,112,90,.1) 0%, transparent 55%);
+}
+
+/* ══════════════════════════════════════════
+   DYSLEXIA-FRIENDLY FONT
+══════════════════════════════════════════ */
+body.dyslexia-font,
+body.dyslexia-font input,
+body.dyslexia-font select,
+body.dyslexia-font textarea,
+body.dyslexia-font .chip,
+body.dyslexia-font .tab-btn,
+body.dyslexia-font label,
+body.dyslexia-font p,
+body.dyslexia-font li,
+body.dyslexia-font .card-why,
+body.dyslexia-font .r-why,
+body.dyslexia-font .dp-row,
+body.dyslexia-font .must-order,
+body.dyslexia-font .pro-tip { font-family:'OpenDyslexic','Atkinson Hyperlegible',sans-serif !important; }
+body.dyslexia-font h1,
+body.dyslexia-font h2,
+body.dyslexia-font h3,
+body.dyslexia-font h4,
+body.dyslexia-font .hero-h1,
+body.dyslexia-font .r-name,
+body.dyslexia-font .tp-wordmark { font-family:'Atkinson Hyperlegible',sans-serif !important; font-style:normal !important; }
+
+/* ══════════════════════════════════════════
+   4-LEVEL TEXT SIZING
+══════════════════════════════════════════ */
+body.text-sm  { font-size:.88rem; }
+body.text-md  { font-size:1rem; }
+body.text-lg  { font-size:1.15rem; }
+body.text-xl  { font-size:1.35rem; }
+body.text-lg label, body.text-lg .chip, body.text-lg input, body.text-lg select,
+body.text-lg p, body.text-lg .r-why, body.text-lg .dp-row { font-size:1.05rem !important; }
+body.text-xl label, body.text-xl .chip, body.text-xl input, body.text-xl select,
+body.text-xl p, body.text-xl .r-why, body.text-xl .dp-row { font-size:1.22rem !important; }
+
+/* ══════════════════════════════════════════
+   REDUCE MOTION
+══════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation-duration:.01ms !important;
+  transition-duration:.01ms !important;
+}
+
+/* ══════════════════════════════════════════
+   EXPANDED A11Y PANEL (drawer)
+══════════════════════════════════════════ */
+.a11y-drawer {
+  position:fixed; top:0; left:0; bottom:0; width:300px;
+  background:var(--cream); z-index:1050; border-right:1px solid var(--border);
+  transform:translateX(-100%); transition:transform .3s ease;
+  display:flex; flex-direction:column;
+  box-shadow:4px 0 24px rgba(0,0,0,.15);
+}
+.a11y-drawer.open { transform:translateX(0); }
+.a11y-drawer-hdr {
+  background:var(--primary); color:#fff; padding:1.2rem 1.4rem;
+  display:flex; justify-content:space-between; align-items:center;
+  transition:background .4s;
+}
+.a11y-drawer-hdr h4 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:300; }
+.a11y-drawer-close { background:transparent; border:none; color:#fff; font-size:1.2rem; cursor:pointer; }
+.a11y-drawer-body { flex:1; overflow-y:auto; padding:1.25rem; }
+.a11y-group { margin-bottom:1.5rem; }
+.a11y-group-title { font-size:.68rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--warm-gray); margin-bottom:.65rem; display:flex; align-items:center; gap:.5rem; }
+.a11y-group-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* Text size stepper */
+.text-size-row { display:flex; align-items:center; gap:.5rem; }
+.ts-btn {
+  width:36px; height:36px; border:1px solid var(--border); background:var(--card-bg);
+  font-family:'DM Sans',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; color:var(--ink);
+  transition:all .2s; flex-shrink:0;
+}
+.ts-btn:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+.ts-label { flex:1; text-align:center; font-size:.82rem; color:var(--warm-gray); font-weight:500; }
+.ts-display { font-size:1.1rem; font-weight:600; color:var(--primary); width:28px; text-align:center; }
+
+/* Toggle rows in drawer */
+.a11y-toggle-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.6rem .75rem; background:var(--card-bg); border:1px solid var(--border);
+  margin-bottom:.45rem;
+}
+.a11y-toggle-left { display:flex; flex-direction:column; }
+.a11y-toggle-main { font-size:.82rem; font-weight:500; color:var(--ink); }
+.a11y-toggle-sub  { font-size:.7rem; color:var(--mid-gray); margin-top:.1rem; }
+
+/* ══════════════════════════════════════════
+   TRIP ITINERARY BUILDER
+══════════════════════════════════════════ */
+.itin-panel {
+  position:fixed; left:0; top:0; bottom:0; width:360px;
+  background:var(--cream); border-right:1px solid var(--border);
+  z-index:800; transform:translateX(-100%);
+  transition:transform .3s ease; display:flex; flex-direction:column;
+  box-shadow:4px 0 24px rgba(0,0,0,.12);
+}
+.itin-panel.open { transform:translateX(0); }
+.itin-hdr {
+  background:var(--primary); color:#fff; padding:1.2rem 1.4rem;
+  display:flex; justify-content:space-between; align-items:center;
+  transition:background .4s;
+}
+.itin-hdr h4 { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:300; }
+.itin-close { background:transparent; border:none; color:#fff; font-size:1.2rem; cursor:pointer; }
+.itin-body { flex:1; overflow-y:auto; padding:1.2rem; }
+.itin-trip-name-row { display:flex; gap:.5rem; margin-bottom:1rem; }
+.itin-trip-name-row input { flex:1; background:#fff; border:1px solid var(--border); padding:.6rem .8rem; font-family:'DM Sans',sans-serif; font-size:.88rem; color:var(--ink); outline:none; }
+.itin-trip-name-row input:focus { border-color:var(--accent); }
+.itin-empty { text-align:center; padding:3rem 1rem; color:var(--mid-gray); font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; line-height:1.6; }
+.itin-item {
+  background:var(--card-bg); border:1px solid var(--border); padding:.85rem 1rem;
+  margin-bottom:.55rem; cursor:grab; user-select:none; position:relative;
+  transition:border-color .2s, box-shadow .2s;
+}
+.itin-item:hover { border-color:var(--accent); }
+.itin-item.dragging { opacity:.5; box-shadow:var(--shadow); }
+.itin-item-num {
+  position:absolute; top:-.5rem; left:.75rem;
+  background:var(--primary); color:#fff;
+  font-size:.6rem; font-weight:700; letter-spacing:.08em; padding:.1rem .45rem;
+  transition:background .4s;
+}
+.itin-item-name { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:400; margin-top:.3rem; }
+.itin-item-meta { font-size:.73rem; color:var(--mid-gray); margin-top:.15rem; }
+.itin-item-mode { font-size:.6rem; letter-spacing:.07em; text-transform:uppercase; padding:.1rem .4rem; color:#fff; display:inline-block; margin-top:.3rem; }
+.itin-item-actions { display:flex; gap:.4rem; margin-top:.5rem; }
+.itin-action-btn { font-size:.68rem; color:var(--warm-gray); cursor:pointer; background:transparent; border:1px solid var(--border); padding:.2rem .55rem; font-family:'DM Sans',sans-serif; transition:all .2s; }
+.itin-action-btn:hover { background:var(--ink); color:#fff; border-color:var(--ink); }
+.itin-note-input { width:100%; margin-top:.4rem; background:#fff; border:1px solid rgba(15,13,10,.1); padding:.4rem .6rem; font-family:'DM Sans',sans-serif; font-size:.76rem; color:var(--ink); resize:none; outline:none; min-height:40px; }
+
+.itin-ftr { padding:1rem 1.2rem; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:.5rem; }
+.btn-itin-export { width:100%; padding:.65rem; background:var(--primary); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:background .4s; }
+.btn-itin-export:hover { filter:brightness(1.12); }
+.btn-itin-clear { width:100%; padding:.55rem; background:transparent; border:1px solid rgba(15,13,10,.18); color:var(--warm-gray); font-family:'DM Sans',sans-serif; font-size:.76rem; cursor:pointer; transition:all .2s; }
+.btn-itin-clear:hover { background:var(--hot); color:#fff; border-color:var(--hot); }
+
+/* Add to itinerary button on cards */
+.btn-itin-add { padding:.42rem 1rem; background:transparent; border:1px solid var(--border); font-family:'DM Sans',sans-serif; font-size:.74rem; font-weight:500; cursor:pointer; color:var(--warm-gray); transition:all .2s; display:flex; align-items:center; gap:.35rem; }
+.btn-itin-add:hover, .btn-itin-add.in-itin { background:var(--sage); color:#fff; border-color:var(--sage); }
+
+/* ══════════════════════════════════════════
+   PHRASE CARDS MODAL
+══════════════════════════════════════════ */
+.phrase-modal-overlay {
+  position:fixed; inset:0; background:rgba(15,13,10,.6);
+  z-index:1200; display:flex; align-items:center; justify-content:center;
+  padding:1.5rem; opacity:0; pointer-events:none; transition:opacity .25s;
+}
+.phrase-modal-overlay.open { opacity:1; pointer-events:auto; }
+.phrase-modal {
+  background:var(--cream); width:100%; max-width:680px; max-height:88vh;
+  overflow-y:auto; transform:translateY(14px); transition:transform .25s;
+}
+.phrase-modal-overlay.open .phrase-modal { transform:translateY(0); }
+.phrase-modal-hdr {
+  background:var(--primary); color:#fff; padding:1.2rem 1.5rem;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  position:sticky; top:0; z-index:1; transition:background .4s;
+}
+.phrase-modal-hdr h3 { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:300; }
+.phrase-modal-hdr p { font-size:.74rem; opacity:.8; margin-top:.2rem; }
+.phrase-search { width:100%; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:#fff; padding:.5rem .85rem; font-family:'DM Sans',sans-serif; font-size:.85rem; outline:none; margin-top:.75rem; }
+.phrase-search::placeholder { color:rgba(255,255,255,.5); }
+.phrase-body { padding:1.25rem; }
+.phrase-lang-section { margin-bottom:1.5rem; }
+.phrase-lang-title { font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--warm-gray); margin-bottom:.6rem; display:flex; align-items:center; gap:.5rem; }
+.phrase-lang-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.phrase-card {
+  background:var(--card-bg); border:1px solid var(--border); padding:.85rem 1rem;
+  margin-bottom:.5rem; display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;
+}
+.phrase-text { flex:1; }
+.phrase-english { font-size:.72rem; color:var(--mid-gray); margin-bottom:.2rem; font-style:italic; }
+.phrase-local { font-size:.92rem; color:var(--ink); font-weight:500; line-height:1.4; }
+.phrase-phonetic { font-size:.72rem; color:var(--warm-gray); margin-top:.18rem; }
+.phrase-copy { padding:.3rem .7rem; background:transparent; border:1px solid var(--border); font-family:'DM Sans',sans-serif; font-size:.7rem; cursor:pointer; color:var(--warm-gray); transition:all .2s; white-space:nowrap; flex-shrink:0; }
+.phrase-copy:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+.phrase-print-btn { width:100%; padding:.7rem; background:var(--sage); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; margin-top:1rem; transition:background .2s; }
+.phrase-print-btn:hover { background:var(--primary); }
+
+@media print {
+  .a11y-bar, .mode-bar, .hero, #finder, #results, #resource-center,
+  .itin-panel, .saved-panel, #saved-fab, footer { display:none !important; }
+  .phrase-modal { position:static; max-height:none; box-shadow:none; }
+  .phrase-modal-overlay { position:static; background:none; opacity:1; pointer-events:auto; }
+  .phrase-copy, .phrase-print-btn, .phrase-search { display:none !important; }
+}
+  .fg,.fg3,.access-grid { grid-template-columns:1fr; }
+  .tab-panels { padding:1.5rem 1.25rem 1rem; }
+  .tab-controls { padding:1rem 1.25rem 1.25rem; }
+  .r-card-body,.r-card-bottom,.detail-panel,.r-card-actions,.foodie-card-extra { padding-left:1.25rem; padding-right:1.25rem; }
+  .dp-grid { grid-template-columns:1fr 1fr; }
+  #saved-panel { width:100%; }
+  .mode-btn { padding:.5rem 1.2rem; font-size:.76rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="aria-live" aria-live="polite" aria-atomic="true" role="status"></div>
+<a class="skip-link" href="#finder">Skip to restaurant finder</a>
+
+
+<!-- ══ A11Y BAR ══ -->
+<div class="a11y-bar" role="toolbar" aria-label="Accessibility and language options">
+  <div class="a11y-left">
+    <span class="a11y-label">Access</span>
+    <button class="a11y-btn" onclick="openA11yDrawer()" aria-label="Open accessibility settings">⚙ Settings</button>
+    <button class="a11y-btn" id="btn-hc" aria-pressed="false" onclick="toggleA11y('hc')">◑ Contrast</button>
+    <button class="a11y-btn" id="btn-dark" aria-pressed="false" onclick="toggleA11y('dark')">🌙 Dark</button>
+    <button class="a11y-btn" id="btn-ts-down" onclick="changeTextSize(-1)" aria-label="Decrease text size">𝐀-</button>
+    <span id="ts-indicator" style="color:rgba(255,255,255,.6);font-size:.72rem;min-width:1.5rem;text-align:center">M</span>
+    <button class="a11y-btn" id="btn-ts-up" onclick="changeTextSize(1)" aria-label="Increase text size">𝐀+</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
+    <button class="a11y-btn" onclick="openPhraseCards()" aria-label="Open service animal phrase cards">🦮 Phrase Cards</button>
+    <button class="a11y-btn" onclick="toggleItinPanel()" aria-label="Open trip itinerary builder">🗺 Itinerary</button>
+    <span class="a11y-label">🌐</span>
+    <select class="lang-select" id="langSel" onchange="setLang(this.value)" aria-label="Select language">
+      <option value="en">English</option><option value="es">Español</option>
+      <option value="fr">Français</option><option value="de">Deutsch</option>
+      <option value="it">Italiano</option><option value="pt">Português</option>
+      <option value="ja">日本語</option><option value="zh">中文</option>
+      <option value="ar">العربية</option><option value="ko">한국어</option>
+      <option value="nl">Nederlands</option><option value="sv">Svenska</option>
+      <option value="pl">Polski</option><option value="ru">Русский</option>
+    </select>
+    <button class="a11y-btn" id="saved-nav-btn" onclick="toggleSavedPanel()" style="display:none" aria-label="View saved restaurants">🔖 Saved (<span id="saved-nav-ct">0</span>)</button>
+  </div>
+</div>
+
+<!-- ══ A11Y DRAWER ══ -->
+<div class="a11y-drawer" id="a11y-drawer" role="dialog" aria-modal="true" aria-label="Accessibility settings">
+  <div class="a11y-drawer-hdr">
+    <h4>♿ Accessibility Settings</h4>
+    <button class="a11y-drawer-close" onclick="closeA11yDrawer()" aria-label="Close">✕</button>
+  </div>
+  <div class="a11y-drawer-body">
+
+    <div class="a11y-group">
+      <div class="a11y-group-title">Display</div>
+      <div class="a11y-toggle-row">
+        <div class="a11y-toggle-left"><span class="a11y-toggle-main">Dark Mode</span><span class="a11y-toggle-sub">Easier on eyes in low light</span></div>
+        <label class="toggle-sw" aria-label="Dark mode"><input type="checkbox" id="drawer-dark" onchange="toggleA11y('dark')"><span class="toggle-track"></span></label>
+      </div>
+      <div class="a11y-toggle-row">
+        <div class="a11y-toggle-left"><span class="a11y-toggle-main">High Contrast</span><span class="a11y-toggle-sub">Maximum color contrast ratio</span></div>
+        <label class="toggle-sw" aria-label="High contrast"><input type="checkbox" id="drawer-hc" onchange="toggleA11y('hc')"><span class="toggle-track"></span></label>
+      </div>
+      <div class="a11y-toggle-row">
+        <div class="a11y-toggle-left"><span class="a11y-toggle-main">Dyslexia-Friendly Font</span><span class="a11y-toggle-sub">OpenDyslexic + Atkinson Hyperlegible</span></div>
+        <label class="toggle-sw" aria-label="Dyslexia font"><input type="checkbox" id="drawer-dyslexia" onchange="toggleA11y('dyslexia')"><span class="toggle-track"></span></label>
+      </div>
+      <div class="a11y-toggle-row">
+        <div class="a11y-toggle-left"><span class="a11y-toggle-main">Reduce Motion</span><span class="a11y-toggle-sub">Minimize animations and transitions</span></div>
+        <label class="toggle-sw" aria-label="Reduce motion"><input type="checkbox" id="drawer-motion" onchange="toggleA11y('motion')"><span class="toggle-track"></span></label>
+      </div>
+    </div>
+
+    <div class="a11y-group">
+      <div class="a11y-group-title">Text Size</div>
+      <div class="text-size-row">
+        <button class="ts-btn" onclick="changeTextSize(-1)" aria-label="Decrease text size">−</button>
+        <div class="ts-label">
+          <div class="ts-display" id="drawer-ts-display">M</div>
+          <div style="font-size:.68rem;color:var(--mid-gray);margin-top:.1rem" id="drawer-ts-label">Medium (default)</div>
+        </div>
+        <button class="ts-btn" onclick="changeTextSize(1)" aria-label="Increase text size">+</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:.6rem;gap:.3rem">
+        <button class="ts-btn" style="flex:1;width:auto;font-size:.7rem" onclick="setTextSize(0)" aria-label="Small text">S</button>
+        <button class="ts-btn" style="flex:1;width:auto;font-size:.7rem" onclick="setTextSize(1)" aria-label="Medium text">M</button>
+        <button class="ts-btn" style="flex:1;width:auto;font-size:.7rem" onclick="setTextSize(2)" aria-label="Large text">L</button>
+        <button class="ts-btn" style="flex:1;width:auto;font-size:.7rem" onclick="setTextSize(3)" aria-label="Extra large text">XL</button>
+      </div>
+    </div>
+
+    <div class="a11y-group">
+      <div class="a11y-group-title">Navigation</div>
+      <p style="font-size:.78rem;color:var(--warm-gray);line-height:1.6;margin-bottom:.75rem">This site is fully keyboard navigable. Use <kbd style="background:var(--border);padding:.1rem .35rem;font-size:.72rem">Tab</kbd> to move between elements, <kbd style="background:var(--border);padding:.1rem .35rem;font-size:.72rem">Enter</kbd> or <kbd style="background:var(--border);padding:.1rem .35rem;font-size:.72rem">Space</kbd> to activate, and <kbd style="background:var(--border);padding:.1rem .35rem;font-size:.72rem">Esc</kbd> to close panels.</p>
+      <p style="font-size:.76rem;color:var(--mid-gray)">Compatible with JAWS, NVDA, VoiceOver (iOS/macOS), and TalkBack (Android).</p>
+    </div>
+
+    <div class="a11y-group">
+      <div class="a11y-group-title">Tools</div>
+      <button onclick="closeA11yDrawer();openPhraseCards()" style="width:100%;padding:.7rem;background:var(--primary);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;margin-bottom:.5rem;transition:background .4s">🦮 Service Animal Phrase Cards</button>
+      <button onclick="closeA11yDrawer();toggleItinPanel()" style="width:100%;padding:.7rem;background:var(--sage);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;transition:background .2s">🗺 Trip Itinerary Builder</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODE TOGGLE BAR ══ -->
+<div class="mode-bar" role="navigation" aria-label="Switch between Business and Personal mode">
+  <div class="mode-toggle" role="group" aria-label="Dining mode">
+    <div class="mode-glider" id="mode-glider"></div>
+    <button class="mode-btn active" id="mbtn-biz" onclick="setMode('business')" aria-pressed="true" aria-label="Business traveler mode">
+      💼 Business Traveler
+    </button>
+    <button class="mode-btn" id="mbtn-per" onclick="setMode('personal')" aria-pressed="false" aria-label="Personal and leisure dining mode">
+      🍷 Personal &amp; Leisure
+    </button>
+  </div>
+</div>
+
+<!-- ══ HERO ══ -->
+<main>
+<section class="hero" aria-label="TablePassport">
+  <div class="hero-bg hero-bg-biz" aria-hidden="true"></div>
+  <div class="hero-bg hero-bg-personal" aria-hidden="true"></div>
+  <div class="hero-ring" aria-hidden="true"></div>
+  <div class="hero-ring" aria-hidden="true"></div>
+  <div class="hero-ring" aria-hidden="true"></div>
+
+  <div class="tp-wordmark">TablePassport</div>
+
+  <div class="hero-headline-wrap" aria-live="polite">
+    <h1 class="hero-h1 biz-headline">The <em>Business Traveler's</em><br><strong>Table,</strong> Anywhere on Earth</h1>
+    <h1 class="hero-h1 per-headline" aria-hidden="true">Eat <em>Extraordinarily</em> Well,<br><strong>Everywhere</strong> You Go</h1>
+  </div>
+
+  <div class="hero-sub-wrap">
+    <p class="hero-sub-biz">
+      Curated dining for road warriors — impress clients, stay accessible, eat local, skip the research.
+    </p>
+    <p class="hero-sub-per" aria-hidden="true">
+      Hidden gems, chef's tables, romantic dinners, family feasts — the meals worth building a trip around.
+    </p>
+  </div>
+
+  <div class="pillars" role="list" aria-label="Key features">
+    <div class="pillar" role="listitem">💼 Business & Personal</div>
+    <div class="pillar" role="listitem">🦮 Service Animal Verified</div>
+    <div class="pillar" role="listitem">⠿ Braille Menu Info</div>
+    <div class="pillar" role="listitem">🔕 No Chains · No Ads</div>
+    <div class="pillar" role="listitem">🌍 14 Languages</div>
+    <div class="pillar" role="listitem">♿ WCAG 2.1 AA</div>
+  </div>
+
+  <div class="hero-cta">
+    <button class="btn-primary" onclick="document.getElementById('finder').scrollIntoView({behavior:'smooth'})">Find My Table</button>
+    <button class="btn-outline" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">Our Story</button>
+  </div>
+  <div class="scroll-line" aria-hidden="true"></div>
+</section>
+
+<!-- ══ FINDER ══ -->
+<section id="finder" aria-labelledby="finder-h2">
+  <div class="section-header">
+    <div class="eyebrow" id="finder-eyebrow">Your Passport to the Perfect Business Meal</div>
+    <h2 id="finder-h2">Tell us about your <em>dining moment</em></h2>
+  </div>
+
+  <div class="form-shell" role="region" aria-label="Restaurant search">
+
+    <nav class="tab-nav" role="tablist" aria-label="Search steps">
+      <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="t0" id="tbtn0" onclick="goTab(0)"><div class="tab-dot"></div>1. Where &amp; When</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="t1" id="tbtn1" onclick="goTab(1)"><div class="tab-dot"></div>2. The Occasion</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="t2" id="tbtn2" onclick="goTab(2)"><div class="tab-dot"></div>3. Food &amp; Vibe</button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="t3" id="tbtn3" onclick="goTab(3)"><div class="tab-dot"></div>4. Access Needs</button>
+    </nav>
+
+    <div class="tab-panels">
+
+      <!-- TAB 1 -->
+      <div class="tab-panel active" id="t0" role="tabpanel" aria-labelledby="tbtn0">
+        <div class="fg">
+          <!-- City + Zip row -->
+          <div class="form-group" style="grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:end">
+            <div class="form-group" style="margin:0">
+              <label for="city">Destination City <span style="color:var(--hot)" aria-label="required">*</span></label>
+              <input type="text" id="city" placeholder="Tokyo · Rome · Chicago · Singapore · Buenos Aires…" aria-required="true" autocomplete="off"/>
+            </div>
+            <div class="form-group" style="margin:0;min-width:130px">
+              <label for="zipcode">Zip / Postal Code</label>
+              <input type="text" id="zipcode" placeholder="e.g. 60614" aria-describedby="zip-hint" autocomplete="postal-code" inputmode="text" style="letter-spacing:.05em"/>
+              <span class="hint" id="zip-hint" style="display:block;margin-top:.3rem">Optional — narrows search to your exact area</span>
+            </div>
+          </div>
+
+          <!-- Location reference -->
+          <div class="form-group fg-full">
+            <label for="loc-ref">Near (hotel, neighborhood, or landmark)</label>
+            <input type="text" id="loc-ref" placeholder="e.g. Near Millennium Park · Shinjuku Station · 5th Ave & 42nd St…"/>
+            <span class="hint">Optional — helps us prioritize proximity</span>
+          </div>
+
+          <!-- Distance filter -->
+          <div class="form-group fg-full">
+            <label id="distance-lbl">Maximum Distance <span class="hint" style="display:inline">— how far are you willing to go?</span></label>
+            <div class="chip-row" id="distance-chips" role="group" aria-labelledby="distance-lbl">
+              <button class="chip" data-val="within a 5 minute walk (under 0.3 miles)" role="radio" aria-checked="false">🚶 5 min walk</button>
+              <button class="chip" data-val="within a 10–15 minute walk (under 0.75 miles)" role="radio" aria-checked="false">🚶 15 min walk</button>
+              <button class="chip" data-val="within 1–2 miles (short ride or longer walk)" role="radio" aria-checked="false">🚗 1–2 miles</button>
+              <button class="chip" data-val="within 5 miles" role="radio" aria-checked="false">🚗 Within 5 miles</button>
+              <button class="chip selected" data-val="anywhere in the city — distance is not a concern" role="radio" aria-checked="true">🌆 Anywhere in the city</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="meal-time">Meal</label>
+            <select id="meal-time">
+              <option value="">Any meal</option>
+              <option value="breakfast">Breakfast</option>
+              <option value="brunch">Brunch</option>
+              <option value="lunch">Lunch</option>
+              <option value="happy hour">Happy Hour</option>
+              <option value="dinner">Dinner</option>
+              <option value="late night">Late Night</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="time-avail">Time Available</label>
+            <select id="time-avail">
+              <option value="">Flexible</option>
+              <option value="under 30 minutes">Under 30 min — quick bite</option>
+              <option value="about 45 minutes">~45 min — working lunch</option>
+              <option value="about 1 hour">~1 hour</option>
+              <option value="1.5 to 2 hours">1.5–2 hours — full experience</option>
+              <option value="no rush at all">No rush — we're settling in</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="budget">Budget per person</label>
+            <select id="budget">
+              <option value="">Flexible</option>
+              <option value="under $20">Under $20</option>
+              <option value="$20–$50">$20–$50</option>
+              <option value="$50–$100">$50–$100</option>
+              <option value="over $100">$100+ — fine dining</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="transport">Getting there by</label>
+            <select id="transport">
+              <option value="">No preference</option>
+              <option value="on foot">Walking</option>
+              <option value="rideshare or taxi">Rideshare / Taxi</option>
+              <option value="public transit">Public Transit</option>
+              <option value="driving — parking availability matters">Driving (parking matters)</option>
+            </select>
+          </div>
+          <div class="form-group fg-full">
+            <label id="result-count-lbl">How many recommendations do you want?</label>
+            <div class="chip-row" id="result-count-chips" role="group" aria-labelledby="result-count-lbl">
+              <button class="chip" data-val="1" role="radio" aria-checked="false">1 — Just the best</button>
+              <button class="chip" data-val="2" role="radio" aria-checked="false">2 — A backup option</button>
+              <button class="chip selected" data-val="4" role="radio" aria-checked="true">4 — Good variety</button>
+              <button class="chip" data-val="6" role="radio" aria-checked="false">6 — More to explore</button>
+              <button class="chip" data-val="10" role="radio" aria-checked="false">10 — The full list</button>
+            </div>
+          </div>
+          <div class="form-group fg-full">
+            <div class="toggle-row">
+              <div class="toggle-left"><span class="tl-main">Walk-in friendly only</span><span class="tl-sub">Skip places that require advance reservations</span></div>
+              <label class="toggle-sw" aria-label="Walk-in only"><input type="checkbox" id="walkin"><span class="toggle-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2 — OCCASION (swaps content by mode) -->
+      <div class="tab-panel" id="t1" role="tabpanel" aria-labelledby="tbtn1">
+
+        <!-- BUSINESS occasion chips -->
+        <div id="biz-occasion-section">
+          <div class="form-group" style="margin-bottom:1.75rem">
+            <label id="occ-lbl">What's the occasion?</label>
+            <div class="chip-row" id="occ-chips" role="group" aria-labelledby="occ-lbl">
+              <button class="chip" data-val="impressing a client — professional, impressive, memorable setting" role="radio" aria-checked="false">💼 Impress a Client</button>
+              <button class="chip" data-val="a working lunch where conversation and productivity matter" role="radio" aria-checked="false">💻 Working Lunch</button>
+              <button class="chip" data-val="a team dinner celebrating a win or building rapport" role="radio" aria-checked="false">🥂 Team Dinner</button>
+              <button class="chip" data-val="a solo business traveler wanting comfort and quality" role="radio" aria-checked="false">🧍 Solo Business</button>
+              <button class="chip" data-val="a conference or event dinner for a larger group" role="radio" aria-checked="false">🎤 Conference Dinner</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label id="party-lbl">Party size</label>
+            <div class="chip-row" id="party-chips" role="group" aria-labelledby="party-lbl">
+              <button class="chip" data-val="dining solo" role="radio" aria-checked="false">Solo</button>
+              <button class="chip" data-val="2 people" role="radio" aria-checked="false">2</button>
+              <button class="chip" data-val="3–4 people" role="radio" aria-checked="false">3–4</button>
+              <button class="chip" data-val="5–8 people" role="radio" aria-checked="false">5–8</button>
+              <button class="chip" data-val="a large group of 9 or more" role="radio" aria-checked="false">9+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Business Requirements</label>
+            <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.2rem">
+              <div class="toggle-row"><div class="toggle-left"><span class="tl-main">Private or semi-private room</span><span class="tl-sub">Confidential conversations, team debriefs</span></div><label class="toggle-sw"><input type="checkbox" id="private-room"><span class="toggle-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-left"><span class="tl-main">Expense-friendly</span><span class="tl-sub">Proper itemized receipts, corporate card accepted</span></div><label class="toggle-sw"><input type="checkbox" id="expense"><span class="toggle-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-left"><span class="tl-main">WiFi available</span><span class="tl-sub">For working lunches and staying connected</span></div><label class="toggle-sw"><input type="checkbox" id="wifi"><span class="toggle-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-left"><span class="tl-main">Conversation-friendly noise level</span><span class="tl-sub">Quiet enough to hear across the table</span></div><label class="toggle-sw"><input type="checkbox" id="quiet" checked><span class="toggle-track"></span></label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PERSONAL occasion chips -->
+        <div id="per-occasion-section" style="display:none">
+          <div class="form-group" style="margin-bottom:1.75rem">
+            <label id="per-occ-lbl">What kind of evening (or morning)?</label>
+            <div class="chip-row" id="per-occ-chips" role="group" aria-labelledby="per-occ-lbl">
+              <button class="chip" data-val="a deeply romantic dinner for two — intimate, special, memorable" role="radio" aria-checked="false">❤️ Date Night / Romantic</button>
+              <button class="chip" data-val="a serious foodie exploration — chef-driven, creative, off-menu experiences" role="radio" aria-checked="false">🍴 Foodie Exploration</button>
+              <button class="chip" data-val="a milestone celebration — anniversary, birthday, or special achievement" role="radio" aria-checked="false">🎂 Milestone Celebration</button>
+              <button class="chip" data-val="a relaxed weekend brunch" role="radio" aria-checked="false">☀️ Weekend Brunch</button>
+              <button class="chip" data-val="a family meal — welcoming to children, relaxed, not stuffy" role="radio" aria-checked="false">👨‍👩‍👧 Family Dining</button>
+              <button class="chip" data-val="a fun night out with friends — lively, shareable, convivial" role="radio" aria-checked="false">👯 Friends Night Out</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:1.75rem">
+            <label id="per-party-lbl">Party size</label>
+            <div class="chip-row" id="per-party-chips" role="group" aria-labelledby="per-party-lbl">
+              <button class="chip" data-val="dining solo" role="radio" aria-checked="false">Solo</button>
+              <button class="chip" data-val="2 people" role="radio" aria-checked="false">2</button>
+              <button class="chip" data-val="3–4 people" role="radio" aria-checked="false">3–4</button>
+              <button class="chip" data-val="5–8 people" role="radio" aria-checked="false">5–8</button>
+              <button class="chip" data-val="a large group of 9 or more" role="radio" aria-checked="false">9+</button>
+            </div>
+          </div>
+
+          <!-- FOODIE SECTION (personal only) -->
+          <div class="foodie-section">
+            <div class="foodie-header">
+              <div class="foodie-icon">🔍</div>
+              <div>
+                <h4>Serious Eater Options</h4>
+                <p>For when you want more than a good meal — you want a story to tell</p>
+              </div>
+            </div>
+            <div class="fg" style="row-gap:1.25rem">
+              <div class="form-group fg-full">
+                <label id="foodie-lbl">What kind of discovery are you after?</label>
+                <div class="chip-row" role="group" aria-labelledby="foodie-lbl" id="foodie-chips">
+                  <button class="chip" data-val="a true hidden gem — almost unknown to tourists, beloved by locals only" role="checkbox" aria-checked="false">🪨 True Hidden Gem</button>
+                  <button class="chip" data-val="a chef's tasting menu or omakase experience worth traveling for" role="checkbox" aria-checked="false">👨‍🍳 Chef's Table / Omakase</button>
+                  <button class="chip" data-val="a place with off-menu specials or secret dishes — ask what's not on the menu" role="checkbox" aria-checked="false">🤫 Off-Menu Experiences</button>
+                  <button class="chip" data-val="a hyper-local specialty — the dish this city is famous for, done best" role="checkbox" aria-checked="false">📍 Iconic Local Specialty</button>
+                  <button class="chip" data-val="a restaurant championing local farmers and seasonal ingredients" role="checkbox" aria-checked="false">🌱 Farm-to-Table</button>
+                  <button class="chip" data-val="a legendary old-school institution — been open for decades, unchanged" role="checkbox" aria-checked="false">🏛️ Old School Institution</button>
+                </div>
+              </div>
+              <div class="form-group fg-full">
+                <div class="toggle-row">
+                  <div class="toggle-left"><span class="tl-main">Tell me something I wouldn't find on Google</span><span class="tl-sub">Focus on genuinely undiscovered places and insider context</span></div>
+                  <label class="toggle-sw"><input type="checkbox" id="surprise-me" checked><span class="toggle-track"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3 -->
+      <div class="tab-panel" id="t2" role="tabpanel" aria-labelledby="tbtn2">
+        <div class="fg" style="row-gap:1.75rem">
+          <div class="form-group fg-full">
+            <label id="cui-lbl">Cuisine <span class="hint" style="display:inline">— all that apply</span></label>
+            <div class="chip-row" id="cuisine-chips" role="group" aria-labelledby="cui-lbl">
+              <button class="chip" data-val="local and traditional cuisine of the destination" role="checkbox" aria-checked="false">Local & Traditional</button>
+              <button class="chip" data-val="Italian" role="checkbox" aria-checked="false">Italian</button>
+              <button class="chip" data-val="Japanese" role="checkbox" aria-checked="false">Japanese</button>
+              <button class="chip" data-val="French" role="checkbox" aria-checked="false">French</button>
+              <button class="chip" data-val="Steakhouse" role="checkbox" aria-checked="false">Steakhouse</button>
+              <button class="chip" data-val="Seafood" role="checkbox" aria-checked="false">Seafood</button>
+              <button class="chip" data-val="Mexican" role="checkbox" aria-checked="false">Mexican</button>
+              <button class="chip" data-val="Indian" role="checkbox" aria-checked="false">Indian</button>
+              <button class="chip" data-val="Chinese" role="checkbox" aria-checked="false">Chinese</button>
+              <button class="chip" data-val="Middle Eastern" role="checkbox" aria-checked="false">Middle Eastern</button>
+              <button class="chip" data-val="Mediterranean" role="checkbox" aria-checked="false">Mediterranean</button>
+              <button class="chip" data-val="Plant-based and vegetarian" role="checkbox" aria-checked="false">Plant-Based</button>
+              <button class="chip" data-val="whatever is the absolute best, any cuisine" role="checkbox" aria-checked="false">✦ Surprise Me</button>
+            </div>
+          </div>
+          <div class="form-group fg-full">
+            <label id="diet-lbl">Dietary needs <span class="hint" style="display:inline">— all that apply</span></label>
+            <div class="chip-row" id="diet-chips" role="group" aria-labelledby="diet-lbl">
+              <button class="chip" data-val="gluten-free options required" role="checkbox" aria-checked="false">Gluten-Free</button>
+              <button class="chip" data-val="vegetarian" role="checkbox" aria-checked="false">Vegetarian</button>
+              <button class="chip" data-val="vegan" role="checkbox" aria-checked="false">Vegan</button>
+              <button class="chip" data-val="kosher" role="checkbox" aria-checked="false">Kosher</button>
+              <button class="chip" data-val="halal" role="checkbox" aria-checked="false">Halal</button>
+              <button class="chip" data-val="nut allergy" role="checkbox" aria-checked="false">Nut Allergy</button>
+              <button class="chip" data-val="shellfish allergy" role="checkbox" aria-checked="false">Shellfish Allergy</button>
+              <button class="chip" data-val="dairy-free" role="checkbox" aria-checked="false">Dairy-Free</button>
+            </div>
+          </div>
+          <div class="form-group fg-full">
+            <label>Local vs. Tourist</label>
+            <div class="range-group">
+              <input type="range" id="local-slider" min="1" max="5" value="3" oninput="updateSlider(this.value)" aria-label="Authenticity from tourist-known to hidden gem">
+              <div class="range-labels"><span>Tourist-Known</span><span>Balanced</span><span>Hidden Gem</span></div>
+              <div class="range-val" id="slider-lbl">Balanced — known but not a tourist trap</div>
+            </div>
+          </div>
+          <div class="form-group fg-full">
+            <div class="toggle-row">
+              <div class="toggle-left"><span class="tl-main">🚫 Avoid chains & franchises</span><span class="tl-sub">Independent, locally-owned restaurants only</span></div>
+              <label class="toggle-sw"><input type="checkbox" id="no-chains" checked><span class="toggle-track"></span></label>
+            </div>
+          </div>
+          <div class="form-group fg-full">
+            <label for="extra-notes">Anything else?</label>
+            <input type="text" id="extra-notes" placeholder="e.g. outdoor terrace, great wine list, bar seating OK, views of the water…"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4 -->
+      <div class="tab-panel" id="t3" role="tabpanel" aria-labelledby="tbtn3">
+        <div class="access-section" role="region" aria-label="Accessibility requirements">
+          <div class="access-header">
+            <div class="access-icon-big" aria-hidden="true">🦮</div>
+            <div class="access-header-text">
+              <h4>Accessibility &amp; Access Needs</h4>
+              <p>These settings apply in both Business and Personal mode. We'll flag what we know about each restaurant's accessibility — including service animal policies, physical access, and first-hand visitor notes from travelers who've dined with guide dogs.</p>
+              <p style="font-size:.72rem;color:var(--mid-gray);margin-top:.6rem;line-height:1.5;padding:.5rem .75rem;border-left:2px solid var(--accent);background:rgba(184,149,74,.06)">⚠️ <strong>TablePassport is a research resource, not a legal authority.</strong> Accessibility laws, service animal policies, and local enforcement vary widely and change over time. Always verify current regulations and restaurant policies directly before your visit.</p>
+            </div>
+          </div>
+          <div class="access-grid" role="group" aria-label="Select all that apply">
+            <label class="access-item" for="a-sa"><input type="checkbox" id="a-sa" name="acc" value="service_animal"><div class="access-item-text"><div class="ai-title">🦮 Service Animal / Guide Dog <span class="tag-v">Verified</span></div><div class="ai-desc">Confirmed access info + notes on local regulations (where known) + first-hand reviewer notes from guide dog users. <em>Laws and enforcement vary — always verify directly with the restaurant.</em></div></div></label>
+            <label class="access-item" for="a-bm" style="grid-column:1/-1"><input type="checkbox" id="a-bm" name="acc" value="menu_accessibility"><div class="access-item-text"><div class="ai-title">📋 Menu Accessibility <span class="tag-new">Expanded</span></div><div class="ai-desc">We'll check for the full range: Braille menus, large print, screen-reader-friendly digital menus, QR codes, audio menus (staff reads), pre-visit app menus, tactile menus, and high-contrast print. If a restaurant doesn't offer any, you'll see a request option.</div></div></label>
+            <label class="access-item" for="a-wc"><input type="checkbox" id="a-wc" name="acc" value="wheelchair"><div class="access-item-text"><div class="ai-title">♿ Wheelchair / Mobility</div><div class="ai-desc">Step-free entry, accessible restrooms, maneuverable layouts. Known limitations flagged.</div></div></label>
+            <label class="access-item" for="a-lv"><input type="checkbox" id="a-lv" name="acc" value="low_vision"><div class="access-item-text"><div class="ai-title">👁 Low Vision / Visual Impairment</div><div class="ai-desc">Good lighting, large-print or audio menus, staff experienced with VI guests.</div></div></label>
+            <label class="access-item" for="a-hh"><input type="checkbox" id="a-hh" name="acc" value="hearing"><div class="access-item-text"><div class="ai-title">👂 Deaf / Hard of Hearing</div><div class="ai-desc">Hearing loops, visual menus, experienced staff.</div></div></label>
+            <label class="access-item" for="a-sf"><input type="checkbox" id="a-sf" name="acc" value="sensory"><div class="access-item-text"><div class="ai-title">🔇 Sensory-Friendly / Low Noise</div><div class="ai-desc">Calmer environments suitable for sensory sensitivities.</div></div></label>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-panels -->
+
+    <div class="tab-controls">
+      <div class="prog-dots" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="4" id="prog-bar" aria-label="Step 1 of 4">
+        <div class="prog-dot current"></div><div class="prog-dot"></div><div class="prog-dot"></div><div class="prog-dot"></div>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:center">
+        <button class="btn-back" id="btn-back" onclick="goTab(currentTab-1)" style="display:none" aria-label="Previous step">← Back</button>
+        <button class="btn-next" id="btn-next" onclick="goTab(currentTab+1)" aria-label="Next step">Next →</button>
+        <button class="find-btn" id="find-btn" style="display:none" onclick="findRestaurants()" aria-label="Find restaurant recommendations"><span aria-hidden="true">✦</span> Find My Tables</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ RESULTS ══ -->
+<section id="results" aria-live="polite" aria-label="Restaurant recommendations">
+  <div class="loading-state" id="loading" role="status">
+    <span class="load-icon" aria-hidden="true" id="load-icon">✈</span>
+    <div class="load-text" id="load-text">Curating your perfect table…</div>
+    <div class="load-sub" id="load-sub">Checking business amenities · Verifying accessibility · Filtering chains</div>
+  </div>
+  <div id="r-cards"></div>
+  <button class="reset-btn" id="reset-btn" style="display:none" onclick="resetForm()">← New Search</button>
+</section>
+</main>
+
+<!-- ══ MENU ACCESSIBILITY REQUEST MODAL ══ -->
+<div class="modal-overlay" id="menu-request-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="modal-title">📋 Menu Accessibility Request</h3>
+        <p id="modal-restaurant-name">Restaurant Name</p>
+      </div>
+      <button class="modal-close" onclick="closeMenuModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <p style="font-size:.85rem;color:var(--warm-gray);margin-bottom:1.25rem;line-height:1.65">This restaurant has not confirmed accessible menu options. Choose how you'd like to proceed:</p>
+
+      <div class="modal-section">
+        <div class="modal-section-title">What would you like to do?</div>
+
+        <label class="request-option" for="ro-send">
+          <input type="checkbox" id="ro-send" checked>
+          <div><div class="ro-title">✉️ Generate a request email for me to send</div><div class="ro-desc">We'll write a polished, friendly email you can copy and send directly to the restaurant.</div></div>
+        </label>
+        <label class="request-option" for="ro-flag">
+          <input type="checkbox" id="ro-flag">
+          <div><div class="ro-title">🏴 Flag for TablePassport outreach program</div><div class="ro-desc">We'll contact the restaurant on your behalf and connect them with free Braille/accessible menu resources.</div></div>
+        </label>
+        <label class="request-option" for="ro-menu">
+          <input type="checkbox" id="ro-menu">
+          <div><div class="ro-title">🔗 Show their menu now so I can review before I arrive</div><div class="ro-desc">We'll attempt to find their menu online so you can plan ahead.</div></div>
+        </label>
+        <label class="request-option" for="ro-resource">
+          <input type="checkbox" id="ro-resource">
+          <div><div class="ro-title">📚 Show restaurant our free accessibility resources</div><div class="ro-desc">Point them to TablePassport's free Braille menu creation guide and large-print templates.</div></div>
+        </label>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Your specific menu need</div>
+        <div class="need-chips" id="need-chips" role="group" aria-label="Select your menu accessibility need">
+          <button class="need-chip selected" data-val="Braille menu">⠿ Braille</button>
+          <button class="need-chip" data-val="large print menu (minimum 18pt font)">🔡 Large Print</button>
+          <button class="need-chip" data-val="screen-reader friendly digital menu">📱 Digital / Screen Reader</button>
+          <button class="need-chip" data-val="audio description from staff">🔊 Audio from Staff</button>
+          <button class="need-chip" data-val="high contrast printed menu">◑ High Contrast</button>
+          <button class="need-chip" data-val="tactile menu">✋ Tactile</button>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="fg" style="gap:.85rem">
+          <div class="form-group">
+            <label for="req-date">Your visit date</label>
+            <input type="date" id="req-date" class="modal-date" style="background:#fff;border:1px solid rgba(15,13,10,.13);padding:.68rem .9rem;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);width:100%;outline:none">
+          </div>
+          <div class="form-group">
+            <label for="req-name">Your name <span class="hint" style="display:inline">— for the email</span></label>
+            <input type="text" id="req-name" placeholder="e.g. Sarah Johnson" style="background:#fff;border:1px solid rgba(15,13,10,.13);padding:.68rem .9rem;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);width:100%;outline:none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated email preview -->
+      <div id="email-preview-wrap" style="display:none">
+        <div class="modal-section-title" style="margin-top:1rem">Generated Email — Copy &amp; Send</div>
+        <pre class="email-preview show" id="email-preview-text"></pre>
+        <button onclick="copyEmail()" style="margin-top:.6rem;padding:.5rem 1rem;background:var(--sage);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:600;letter-spacing:.08em;cursor:pointer;text-transform:uppercase">📋 Copy Email</button>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeMenuModal()">Cancel</button>
+      <button class="btn-modal-send" onclick="submitMenuRequest()">✦ Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESTAURANT RESOURCE CENTER ══ -->
+<section id="resource-center" aria-labelledby="rc-heading">
+  <div class="rc-header">
+    <div class="eyebrow">For Restaurants</div>
+    <h2 id="rc-heading">We Want to Help You <em>Solve This</em></h2>
+    <p>Don't have accessible menus yet? You're not alone — and it's easier than you think. TablePassport connects restaurants with free and low-cost resources to become more accessible, then showcases your efforts to thousands of travelers worldwide.</p>
+  </div>
+
+  <div class="rc-grid">
+    <div class="rc-card">
+      <div class="rc-card-top"><div class="rc-card-icon">📮</div><span class="rc-card-label rc-free">Free · 2–3 Weeks</span></div>
+      <h4>National Braille Press</h4>
+      <p>Offers free menu transcription for qualifying restaurants. Send them your menu and receive a professionally prepared Braille version.</p>
+      <div class="rc-meta">Best for: Restaurants wanting a permanent, professional Braille menu</div>
+      <button class="rc-link" onclick="rcLink('nbp')">Learn More →</button>
+    </div>
+
+    <div class="rc-card">
+      <div class="rc-card-top"><div class="rc-card-icon">⚡</div><span class="rc-card-label rc-low">Low Cost · $50–150</span></div>
+      <h4>Online Transcription Services</h4>
+      <p>Professional Braille transcription services with 3–5 business day turnaround. Fast, affordable, and suitable for any menu size.</p>
+      <div class="rc-meta">Best for: Restaurants that need something quickly and professionally done</div>
+      <button class="rc-link" onclick="rcLink('transcription')">Recommended Services →</button>
+    </div>
+
+    <div class="rc-card">
+      <div class="rc-card-top"><div class="rc-card-icon">📱</div><span class="rc-card-label rc-inst">Instant · Free</span></div>
+      <h4>Screen-Reader Friendly Digital Menu</h4>
+      <p>Create an accessible digital menu your guests can read with VoiceOver, JAWS, or NVDA before or during their visit. We'll show you how in 15 minutes.</p>
+      <div class="rc-meta">Best for: Any restaurant — this is the fastest win with the broadest reach</div>
+      <button class="rc-link" onclick="rcLink('digital')">Step-by-Step Guide →</button>
+    </div>
+
+    <div class="rc-card">
+      <div class="rc-card-top"><div class="rc-card-icon">🖨️</div><span class="rc-card-label rc-tmpl">Free Template</span></div>
+      <h4>Large Print Menu Template</h4>
+      <p>Download our large print menu template (18pt minimum font, high contrast). Print in-house, update anytime. Takes under an hour to set up.</p>
+      <div class="rc-meta">Best for: Restaurants that want a quick, print-ready solution they control</div>
+      <button class="rc-link" onclick="rcLink('template')">Download Template →</button>
+    </div>
+  </div>
+
+  <div class="rc-register" role="complementary" aria-label="Register your restaurant">
+    <h3>✅ Once You Have Accessible Menus</h3>
+    <p>Register with TablePassport and we'll display your accessibility features to thousands of business travelers and foodies worldwide — for free. Accessible restaurants get a verified badge and appear higher in our recommendations.</p>
+    <button class="btn-register" onclick="rcLink('register')">Register Your Restaurant →</button>
+  </div>
+</section>
+
+<!-- ══ TRIP ITINERARY PANEL ══ -->
+<div class="itin-panel" id="itin-panel" role="dialog" aria-modal="true" aria-label="Trip itinerary builder">
+  <div class="itin-hdr">
+    <h4>🗺 Trip Itinerary</h4>
+    <button class="itin-close" onclick="toggleItinPanel()" aria-label="Close itinerary">✕</button>
+  </div>
+  <div class="itin-body">
+    <div class="itin-trip-name-row">
+      <input type="text" id="itin-trip-name" placeholder="Name this trip… e.g. Tokyo Nov 2025" aria-label="Trip name"/>
+    </div>
+    <div id="itin-items">
+      <div class="itin-empty" id="itin-empty">No restaurants added yet.<br>Tap <strong>+ Itinerary</strong> on any card<br>to start building your trip.</div>
+    </div>
+  </div>
+  <div class="itin-ftr">
+    <button class="btn-itin-export" onclick="exportItinerary()">📤 Export Trip Plan</button>
+    <button class="btn-itin-clear" onclick="clearItinerary()">✕ Clear Itinerary</button>
+  </div>
+</div>
+
+<!-- ══ PHRASE CARDS MODAL ══ -->
+<div class="phrase-modal-overlay" id="phrase-modal" role="dialog" aria-modal="true" aria-label="Service animal phrase cards">
+  <div class="phrase-modal">
+    <div class="phrase-modal-hdr">
+      <div style="flex:1">
+        <h3>🦮 Service Animal Phrase Cards</h3>
+        <p>Show these to restaurant staff when you arrive — or call ahead using these phrases. Tap any card to copy.</p>
+        <input class="phrase-search" type="text" id="phrase-search" placeholder="Search language or phrase…" oninput="filterPhrases(this.value)" aria-label="Search phrases"/>
+      </div>
+      <button class="a11y-drawer-close" style="color:#fff;background:transparent;border:none;font-size:1.3rem;cursor:pointer;padding:.2rem;margin-left:1rem;flex-shrink:0" onclick="closePhraseCards()" aria-label="Close">✕</button>
+    </div>
+    <div class="phrase-body" id="phrase-body"></div>
+    <div style="padding:0 1.25rem 1.25rem">
+      <button class="phrase-print-btn" onclick="window.print()">🖨 Print All Phrase Cards</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SAVED PANEL ══ -->
+<div id="saved-panel" role="dialog" aria-modal="true" aria-label="Saved restaurants">
+  <div class="saved-hdr">
+    <h4>Saved Restaurants</h4>
+    <button class="saved-close" onclick="toggleSavedPanel()" aria-label="Close">✕</button>
+  </div>
+  <div class="saved-body" id="saved-body"></div>
+  <div class="saved-ftr"><button class="btn-share-all" onclick="shareAll()">📤 Share My List</button></div>
+</div>
+<button id="saved-fab" onclick="toggleSavedPanel()" aria-label="View saved restaurants">🔖<span class="fab-ct" id="fab-ct">0</span></button>
+
+<!-- ══ ABOUT ══ -->
+<section id="about" aria-labelledby="about-h2">
+
+  <!-- Mission statement -->
+  <div class="about-mission">
+    <div class="eyebrow">Our Story &amp; Mission</div>
+    <h2 id="about-h2">The world's first restaurant platform built for <em>every</em> kind of <strong>traveler</strong></h2>
+    <p>TablePassport is built from the ground up for all travelers — foodies, business travelers, and people of all abilities. Find exceptional dining experiences anywhere in the world, with verified accessibility information including service animal policies, Braille menus, and more — in any language.</p>
+  </div>
+
+  <!-- Three pillars -->
+  <div class="about-pillars" role="list" aria-label="Who TablePassport is for">
+    <div class="about-pillar ap-biz" role="listitem">
+      <span class="about-pillar-icon" aria-hidden="true">💼</span>
+      <h3>Business Travelers</h3>
+      <p>Impress clients, find walk-in-friendly spots near your hotel, track expense-friendly venues, and never waste a meal on mediocrity again — no matter which city you land in.</p>
+    </div>
+    <div class="about-pillar ap-food" role="listitem">
+      <span class="about-pillar-icon" aria-hidden="true">🍴</span>
+      <h3>Serious Food Lovers</h3>
+      <p>Hidden gems locals actually love, chef's tasting menus worth traveling for, off-menu dishes, and insider details you won't find on TripAdvisor. Eat like you live there.</p>
+    </div>
+    <div class="about-pillar ap-access" role="listitem">
+      <span class="about-pillar-icon" aria-hidden="true">🦮</span>
+      <h3>Travelers of All Abilities</h3>
+      <p>Verified service animal policies, Braille and large-print menu availability, wheelchair access, low-vision accommodations, and phrase cards in 30 languages — so you arrive knowing you're welcome.</p>
+    </div>
+  </div>
+
+  <!-- Founder story -->
+  <div class="founder-story">
+
+    <div class="founder-visual" aria-hidden="true">
+      <div class="founder-emblem" role="img" aria-label="TablePassport founders — Chicago, Wrigleyville">
+        <div class="founder-city">Wrigleyville · Chicago</div>
+        <div class="founder-icon-pair">🍽️🦮</div>
+        <div class="founder-tagline">"The tool we always<br>wished existed."</div>
+        <div class="founder-since">Est. 2025</div>
+      </div>
+
+      <div class="founder-quote" style="margin-top:1.5rem">
+        <p>"After years of arriving at restaurants not knowing if we'd be welcomed — we decided to fix it. For everyone."</p>
+        <cite>— The TablePassport Founders, Chicago</cite>
+      </div>
+    </div>
+
+    <div class="founder-text">
+      <div class="eyebrow" style="text-align:left">The Founder Story</div>
+      <h3>Built from <em>lived experience,</em><br>not market research</h3>
+
+      <p>TablePassport was created by a food-loving couple from Chicago's Wrigleyville neighborhood — <strong>a well-traveled VP who has dined in hundreds of cities worldwide for business</strong>, and <strong>his legally blind wife who travels with her guide dog</strong>.</p>
+
+      <p>For years, every restaurant visit away from home carried the same quiet uncertainties: Would they be welcomed at the door? Could the menu be read independently? Would the guide dog be graciously received — or awkwardly turned away at the entrance of a restaurant in a country where the ADA doesn't apply?</p>
+
+      <p>They searched for a tool that answered these questions before the reservation was made. Something that combined genuine local dining knowledge with real accessibility intelligence — not an afterthought checkbox, but a first-class feature built by people who needed it themselves.</p>
+
+      <p>That tool didn't exist. <strong>So they built it.</strong> Not just for themselves — for every business traveler eating alone in an unfamiliar city, every foodie chasing a meal worth the flight, and every person with a disability who deserves to dine with the same confidence and joy as everyone else.</p>
+
+      <p>TablePassport is the answer to the question they asked for years: <em>"Where should we eat tonight — and will they be glad we came?"</em></p>
+
+      <div class="founder-creds" role="list" aria-label="Founder credentials">
+        <div class="cred-badge" role="listitem">📍 Chicago, Wrigleyville</div>
+        <div class="cred-badge" role="listitem">✈️ 100+ cities worldwide</div>
+        <div class="cred-badge" role="listitem">🦮 Guide dog travelers</div>
+        <div class="cred-badge" role="listitem">💼 Enterprise technology executive</div>
+        <div class="cred-badge" role="listitem">🍴 Lifelong foodies</div>
+        <div class="cred-badge" role="listitem">♿ Built from lived experience</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA block -->
+  <div class="about-cta" role="complementary" aria-label="Join TablePassport">
+    <h3>Every table. Every city. Every <em>traveler.</em></h3>
+    <p>Whether you're closing a deal, chasing a tasting menu, or simply hoping to arrive somewhere and be truly welcomed — TablePassport was built for you.</p>
+    <div class="about-cta-btns">
+      <button class="btn-cta-primary" onclick="document.getElementById('finder').scrollIntoView({behavior:'smooth'})">Find My Table Now</button>
+      <button class="btn-cta-secondary" onclick="openPhraseCards()">🦮 Service Animal Phrase Cards</button>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer role="contentinfo">
+  <strong>TablePassport</strong>
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:1.25rem;margin:.75rem 0;font-size:.78rem">
+    <button onclick="document.getElementById('finder').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;color:var(--mid-gray);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;padding:0">Find a Table</button>
+    <button onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;color:var(--mid-gray);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;padding:0">Our Story</button>
+    <button onclick="document.getElementById('resource-center').scrollIntoView({behavior:'smooth'})" style="background:none;border:none;color:var(--mid-gray);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;padding:0">Restaurant Resources</button>
+    <button onclick="openPhraseCards()" style="background:none;border:none;color:var(--mid-gray);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;padding:0">🦮 Phrase Cards</button>
+    <button onclick="openA11yDrawer()" style="background:none;border:none;color:var(--mid-gray);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;padding:0">♿ Accessibility</button>
+  </div>
+  Business &amp; personal dining · Perfected · No ads · No sponsored listings
+  <div class="footer-a11y">WCAG 2.1 AA · Screen Reader Optimized · JAWS &amp; NVDA &amp; VoiceOver &amp; TalkBack Compatible · 14 Languages</div>
+  <div style="margin-top:.75rem;font-size:.68rem;color:var(--mid-gray);opacity:.75;max-width:640px;margin-left:auto;margin-right:auto;line-height:1.6">
+    TablePassport provides restaurant information as a research resource only. We are not a legal authority. Accessibility laws, service animal regulations, and restaurant policies vary by location, change over time, and may be subject to inconsistent local enforcement. Always verify current regulations and restaurant policies directly before your visit. Nothing on this site constitutes legal advice.
+  </div>
+  <div style="margin-top:.75rem;font-size:.68rem;color:var(--mid-gray);opacity:.5">
+    Made with purpose in Wrigleyville, Chicago 🐻
+  </div>
+</footer>
+
+<script>
+/* ══ STATE ══ */
+let mode = 'business';
+let currentTab = 0;
+let currentLang = 'en';
+let savedList = JSON.parse(localStorage.getItem('tp-saved') || '[]');
+
+const announce = msg => { const el = document.getElementById('aria-live'); el.textContent = ''; setTimeout(() => el.textContent = msg, 60); };
+
+/* ══ LANGUAGE ══ */
+function setLang(l) { currentLang = l; document.documentElement.lang = l; document.body.style.direction = l==='ar'?'rtl':'ltr'; announce('Language: '+l); }
+
+/* ══ MODE TOGGLE ══ */
+function setMode(m) {
+  mode = m;
+  const isPer = m === 'personal';
+
+  document.body.classList.toggle('mode-personal', isPer);
+
+  // Update aria
+  document.getElementById('mbtn-biz').setAttribute('aria-pressed', !isPer);
+  document.getElementById('mbtn-per').setAttribute('aria-pressed', isPer);
+  document.getElementById('mbtn-biz').classList.toggle('active', !isPer);
+  document.getElementById('mbtn-per').classList.toggle('active', isPer);
+
+  // Hero aria-hidden swap
+  document.querySelector('.biz-headline').setAttribute('aria-hidden', isPer);
+  document.querySelector('.per-headline').setAttribute('aria-hidden', !isPer);
+  document.querySelector('.hero-sub-biz').setAttribute('aria-hidden', isPer);
+  document.querySelector('.hero-sub-per').setAttribute('aria-hidden', !isPer);
+
+  // Occasion sections
+  document.getElementById('biz-occasion-section').style.display = isPer ? 'none' : 'block';
+  document.getElementById('per-occasion-section').style.display = isPer ? 'block' : 'none';
+
+  // Eyebrow text
+  document.getElementById('finder-eyebrow').textContent = isPer
+    ? 'Your Passport to an Extraordinary Meal'
+    : 'Your Passport to the Perfect Business Meal';
+
+  // Loading icon & text
+  document.getElementById('load-icon').textContent = isPer ? '🍷' : '✈';
+  document.getElementById('load-sub').textContent = isPer
+    ? 'Finding hidden gems · Checking foodie credentials · Filtering tourist traps'
+    : 'Checking business amenities · Verifying accessibility · Filtering chains';
+
+  // Move glider
+  positionGlider();
+  announce(isPer ? 'Personal & Leisure mode selected' : 'Business Traveler mode selected');
+}
+
+function positionGlider() {
+  const active = mode === 'business'
+    ? document.getElementById('mbtn-biz')
+    : document.getElementById('mbtn-per');
+  const g = document.getElementById('mode-glider');
+  g.style.left = active.offsetLeft - 3 + 'px';
+  g.style.width = active.offsetWidth + 'px';
+}
+
+// Init glider after fonts load
+window.addEventListener('load', positionGlider);
+window.addEventListener('resize', positionGlider);
+setTimeout(positionGlider, 200);
+
+/* ══ SLIDER ══ */
+const sliderLabels = ['','Iconic & Tourist-Known','Mostly Popular — well reviewed','Balanced — genuine but not secret','Leaning Local — off tourist radar','True Hidden Gem — locals only'];
+function updateSlider(v) { document.getElementById('slider-lbl').textContent = sliderLabels[v]; }
+
+/* ══ CHIPS ══ */
+document.querySelectorAll('.chip').forEach(chip => {
+  const isRadio = chip.getAttribute('role') === 'radio';
+  chip.addEventListener('click', () => {
+    if (isRadio) {
+      const alreadySelected = chip.classList.contains('selected');
+      // Clear all in group first
+      chip.closest('.chip-row').querySelectorAll('.chip').forEach(c => {
+        c.classList.remove('selected');
+        c.setAttribute('aria-checked', 'false');
+      });
+      // If it wasn't selected before, select it now — otherwise leave all cleared
+      if (!alreadySelected) {
+        chip.classList.add('selected');
+        chip.setAttribute('aria-checked', 'true');
+      }
+    } else {
+      const sel = chip.classList.toggle('selected');
+      chip.setAttribute('aria-checked', sel);
+    }
+  });
+  chip.addEventListener('keydown', e => { if (e.key===' '||e.key==='Enter'){ e.preventDefault(); chip.click(); }});
+});
+
+function getChips(id) { return [...document.querySelectorAll(`#${id} .chip.selected`)].map(c=>c.dataset.val); }
+function getChecked(name) { return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c=>c.value); }
+
+/* ══ TABS ══ */
+function goTab(n) {
+  if (n < 0 || n > 3) return;
+  document.querySelectorAll('.tab-panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => { b.classList.toggle('active', i===n); b.setAttribute('aria-selected', i===n); });
+  currentTab = n;
+  document.querySelectorAll('.prog-dot').forEach((d,i) => { d.classList.toggle('current',i===n); d.classList.toggle('done',i<n); });
+  document.getElementById('prog-bar').setAttribute('aria-valuenow', n+1);
+  document.getElementById('prog-bar').setAttribute('aria-label', `Step ${n+1} of 4`);
+  document.getElementById('btn-back').style.display = n > 0 ? 'block' : 'none';
+  document.getElementById('btn-next').style.display = n < 3 ? 'flex' : 'none';
+  document.getElementById('find-btn').style.display = n === 3 ? 'flex' : 'none';
+  announce(`Step ${n+1} of 4`);
+
+  // Scroll the form shell into view so user never has to scroll up manually
+  const formShell = document.querySelector('.form-shell');
+  if (formShell) {
+    const top = formShell.getBoundingClientRect().top + window.scrollY;
+    const offset = 90; // clear the fixed a11y bar + mode bar
+    window.scrollTo({ top: top - offset, behavior: 'smooth' });
+  }
+}
+
+/* ══ FIND RESTAURANTS ══ */
+async function findRestaurants() {
+  const city        = document.getElementById('city').value.trim();
+  if (!city) {
+    goTab(0);
+    const el = document.getElementById('city');
+    el.focus(); el.style.borderColor = 'var(--hot)';
+    announce('Please enter a destination city');
+    setTimeout(() => el.style.borderColor = '', 2500);
+    return;
+  }
+
+  const isPer       = mode === 'personal';
+  const zipcode     = document.getElementById('zipcode').value.trim();
+  const locRef      = document.getElementById('loc-ref').value.trim();
+  const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
+  const transport   = document.getElementById('transport').value;
+  const mealTime    = document.getElementById('meal-time').value;
+  const timeAvail   = document.getElementById('time-avail').value;
+  const budget      = document.getElementById('budget').value;
+  const walkin      = document.getElementById('walkin').checked;
+  const resultCount = parseInt(getChips('result-count-chips')[0] || '4');
+  const cuisine     = getChips('cuisine-chips');
+  const dietary     = getChips('diet-chips');
+  const localVal    = document.getElementById('local-slider').value;
+  const noChains    = document.getElementById('no-chains').checked;
+  const extraNotes  = document.getElementById('extra-notes').value;
+  const accessNeeds = getChecked('acc');
+  const sliderDesc  = sliderLabels[localVal];
+
+  // Mode-specific
+  let occasion, partySize, bizFeatures = [], foodieFeatures = [];
+  if (isPer) {
+    occasion    = getChips('per-occ-chips')[0] || 'a personal dining occasion';
+    partySize   = getChips('per-party-chips')[0] || 'unspecified';
+    foodieFeatures = getChips('foodie-chips');
+    const surpriseMe = document.getElementById('surprise-me').checked;
+    if (surpriseMe) foodieFeatures.push('something I could not find on Google or TripAdvisor — genuinely undiscovered');
+  } else {
+    occasion    = getChips('occ-chips')[0] || 'a business dining occasion';
+    partySize   = getChips('party-chips')[0] || 'unspecified';
+    if (document.getElementById('private-room').checked) bizFeatures.push('private or semi-private room');
+    if (document.getElementById('expense').checked)      bizFeatures.push('expense-friendly — proper itemized receipts, corporate cards accepted');
+    if (document.getElementById('wifi').checked)         bizFeatures.push('WiFi available');
+    if (document.getElementById('quiet').checked)        bizFeatures.push('quiet enough for conversation');
+    if (walkin) bizFeatures.push('walk-in friendly');
+  }
+
+  // Access labels
+  const accLabels = {
+    service_animal:    'Service animal/guide dog access — describe what is known about local regulations and restaurant policies, but do NOT state that a user "is legally protected" or make definitive legal claims. Instead use language like "local regulations generally allow" or "policies in this country typically permit" and always recommend the user verify directly with the restaurant. Include any first-hand reviewer notes from guide dog users if known.',
+    menu_accessibility:'Full menu accessibility spectrum — check for: Braille menu (verified/not verified), large print menu, screen-reader friendly digital menu, QR code menu, audio menu (staff reads clearly), pre-visit app menu, tactile menu, high contrast printed menu. Report what is known for each type, or "Not confirmed" if unknown.',
+    wheelchair:        'Wheelchair and mobility access',
+    low_vision:        'Low vision and visual impairment friendliness',
+    hearing:           'Hearing accommodation',
+    sensory:           'Sensory-friendly low-noise environment'
+  };
+  const accRequested = accessNeeds.map(a => accLabels[a]).filter(Boolean);
+
+  // Show loading
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('r-cards').innerHTML = '';
+  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('find-btn').disabled = true;
+  announce('Searching for the perfect table…');
+  setTimeout(() => document.getElementById('results').scrollIntoView({behavior:'smooth'}), 150);
+
+  const modeContext = isPer
+    ? `PERSONAL/LEISURE MODE — think like a food critic and passionate traveler, not a travel manager. Prize authenticity, storytelling, and discovery. ${foodieFeatures.length ? 'Foodie priorities: '+foodieFeatures.join('; ') : ''}`
+    : `BUSINESS TRAVELER MODE — prioritize professionalism, reliability, and practicality. ${bizFeatures.length ? 'Required business features: '+bizFeatures.join(', ') : ''}`;
+
+  const prompt = `You are TablePassport, an elite global dining curator. Respond ONLY in valid JSON — no text before or after, no markdown fences.
+
+MODE: ${modeContext}
+
+Search criteria:
+- City: ${city}${zipcode ? ` (zip/postal: ${zipcode})` : ''}
+- Near / starting point: ${locRef || 'city center'}
+- Maximum distance: ${distance}${transport ? ` · Getting there by: ${transport}` : ''}
+- Meal: ${mealTime || 'any'}
+- Time available: ${timeAvail || 'flexible'}
+- Budget: ${budget || 'flexible'}
+- Occasion: ${occasion}
+- Party: ${partySize}
+- Cuisine: ${cuisine.length ? cuisine.join(', ') : 'any — best available'}
+- Dietary: ${dietary.length ? dietary.join(', ') : 'none'}
+- Authenticity: ${sliderDesc}
+- Avoid chains: ${noChains ? 'YES — independent only' : 'no preference'}
+- Extra notes: ${extraNotes || 'none'}
+- Accessibility needed: ${accRequested.length ? accRequested.join('; ') : 'none specified'}
+- Language for response: ${currentLang}
+
+Return exactly ${resultCount} real, well-regarded restaurants. JSON:
+[
+  {
+    "rank": "Top Pick",
+    "name": "Real name",
+    "cuisine": "Type",
+    "priceRange": "$$$",
+    "vibe": "3–5 word vibe",
+    "neighborhood": "Area/neighborhood",
+    "whyGo": "2–3 sentences — why THIS place for THIS specific occasion and traveler. Be vivid and specific.",
+    "mustOrder": "1–2 specific dishes or drinks.",
+    "proTip": "One insider tip that elevates the experience.",
+    "isLocalGem": true,
+    "bizInfo": {
+      "noiseLevel": "quiet|moderate|lively",
+      "privateRoom": "yes|no|unknown",
+      "wifi": "yes|no|unknown",
+      "expenseFriendly": "yes|no|unknown",
+      "dressCode": "casual|smart casual|business casual|formal",
+      "reservationRequired": "yes|recommended|no"
+    },
+    "personalInfo": {
+      "romanticRating": "perfect|good|not ideal",
+      "kidsWelcome": "yes|no|unknown",
+      "bestForFoodieNote": "1 sentence on what makes this genuinely special to a serious eater, or omit",
+      "hiddenDetail": "One truly insider detail — a secret dish, the best seat, a ritual the regulars know"
+    },
+    "accessInfo": {
+      "serviceAnimal": "Detailed only if requested — use hedged language, never definitive legal claims",
+      "menuAccessibility": {
+        "brailleMenu":        "verified|not confirmed|unknown",
+        "largePrint":         "verified|not confirmed|unknown",
+        "digitalScreenReader":"verified|not confirmed|unknown",
+        "qrCode":             "verified|not confirmed|unknown",
+        "audioFromStaff":     "verified|not confirmed|unknown",
+        "appMenuPreVisit":    "verified|not confirmed|unknown — include link if known",
+        "tactileMenu":        "verified|not confirmed|unknown",
+        "highContrastPrint":  "verified|not confirmed|unknown",
+        "overallNote":        "1 sentence summary of menu accessibility status"
+      },
+      "wheelchairAccess": "Detailed only if requested",
+      "lowVision":        "Detailed only if requested",
+      "hearing":          "Detailed only if requested",
+      "sensory":          "Detailed only if requested"
+    }
+  }
+]
+Rank values: Use descriptive labels like "Top Pick", "Local Favorite", "Hidden Gem", "Best for the Occasion", "Most Authentic", "Best Value", "Chef's Choice", "Best Atmosphere", "Most Adventurous", "Best Kept Secret" — assign one unique label per restaurant.
+isLocalGem: true if genuinely independent/local.
+accessInfo: ONLY populate fields that were actually requested — omit all others entirely. Use "Not confirmed — call ahead" if unknown.
+IMPORTANT: Keep all text fields concise. whyGo max 2 sentences. proTip max 1 sentence. mustOrder max 1 sentence. This keeps the response within token limits.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{ role:'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(`API error ${res.status}: ${errData.error?.message || res.statusText}`);
+    }
+
+    const data = await res.json();
+
+    // Check for stop reason — if max_tokens hit, JSON will be truncated
+    const stopReason = data.stop_reason;
+    let raw = data.content.map(i => i.text || '').join('').replace(/```json|```/g, '').trim();
+
+    if (stopReason === 'max_tokens') {
+      // Attempt to salvage partial JSON — find the last complete object
+      const lastBrace = raw.lastIndexOf('}');
+      if (lastBrace !== -1) {
+        raw = raw.slice(0, lastBrace + 1);
+        // Close the array if it's open
+        const openBracket = raw.indexOf('[');
+        if (openBracket !== -1 && !raw.trimEnd().endsWith(']')) raw += ']';
+      }
+    }
+
+    let restaurants;
+    try {
+      restaurants = JSON.parse(raw);
+    } catch (parseErr) {
+      // Try one more repair: find the array, cut at last complete object
+      const arrStart = raw.indexOf('[');
+      if (arrStart !== -1) {
+        let repaired = raw.slice(arrStart);
+        const lastComplete = repaired.lastIndexOf('},');
+        if (lastComplete !== -1) {
+          repaired = repaired.slice(0, lastComplete + 1) + ']';
+        } else {
+          const lastObj = repaired.lastIndexOf('}');
+          repaired = repaired.slice(0, lastObj + 1) + ']';
+        }
+        try {
+          restaurants = JSON.parse(repaired);
+        } catch {
+          throw new Error('Could not parse restaurant data. Please try again.');
+        }
+      } else {
+        throw new Error('Unexpected response format. Please try again.');
+      }
+    }
+
+    if (!Array.isArray(restaurants) || restaurants.length === 0) {
+      throw new Error('No restaurants returned. Please try a different search.');
+    }
+
+    document.getElementById('loading').classList.remove('active');
+    renderResults(restaurants, city, isPer, accessNeeds, bizFeatures);
+    announce(`Found ${restaurants.length} recommendations for ${city}`);
+
+  } catch(err) {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('r-cards').innerHTML = `
+      <div role="alert" style="text-align:center;padding:3rem 2rem;max-width:540px;margin:0 auto">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--ink);margin-bottom:.75rem">Something went wrong</p>
+        <p style="font-size:.88rem;color:var(--warm-gray);line-height:1.7;margin-bottom:1.5rem">${err.message || 'Please try again. If the problem persists, try simplifying your search.'}</p>
+        <button onclick="resetForm()" style="padding:.75rem 1.75rem;background:var(--primary);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">← Try Again</button>
+      </div>`;
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('find-btn').disabled = false;
+    announce('Error loading recommendations — please try again');
+    console.error('TablePassport error:', err);
+  }
+}
+
+/* ══ RENDER ══ */
+function renderResults(restaurants, city, isPer, accessNeeds, bizFeatures) {
+  const container = document.getElementById('r-cards');
+  const modeLabel = isPer ? '🍷 Personal & Leisure' : '💼 Business Traveler';
+  const modeColor = isPer ? 'var(--per-primary)' : '#1a2f4e';
+
+  container.innerHTML = `
+    <div class="results-header">
+      <div class="eyebrow">Your TablePassport Selections</div>
+      <h3>${restaurants.length === 1 ? 'The Best Table' : `${restaurants.length} Best Tables`} in <em>${city}</em></h3>
+      <div style="display:flex;justify-content:center;margin-top:.75rem">
+        <div class="mode-ribbon" style="background:${modeColor}">${modeLabel} Mode</div>
+      </div>
+      <div class="results-meta">
+        <span class="rmeta">✦ AI-curated · no algorithm</span>
+        <span class="rmeta">🚫 No sponsored results</span>
+        ${accessNeeds.length ? '<span class="rmeta">♿ Accessibility verified</span>' : ''}
+      </div>
+    </div>`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'r-cards';
+  wrap.setAttribute('role','list');
+
+  const rankStyles = [
+    { style:'background:var(--hot)' },
+    { style:'background:var(--sage)' },
+    { style:'background:var(--per-primary)' },
+    { style:`background:${isPer?'var(--per-hot)':'#1a2f4e'}` },
+    { style:'background:var(--accent);color:var(--ink)' },
+    { style:'background:var(--warm-gray)' },
+    { style:'background:var(--sage)' },
+    { style:'background:var(--primary)' },
+    { style:'background:var(--per-hot)' },
+    { style:'background:var(--hot)' },
+  ];
+
+  restaurants.forEach((r, i) => {
+    const biz = r.bizInfo || {};
+    const per = r.personalInfo || {};
+    const acc = r.accessInfo || {};
+    const rs  = rankStyles[i] || rankStyles[0];
+    const card = document.createElement('article');
+    card.className = 'r-card';
+    card.setAttribute('role','listitem');
+    card.setAttribute('aria-label', `${r.rank}: ${r.name}`);
+
+    // Badges
+    let badges = `<span class="badge b-cuisine">${r.cuisine}</span>`;
+    badges += `<span class="badge b-price">${r.priceRange}</span>`;
+    badges += `<span class="badge b-vibe">${r.vibe}</span>`;
+    if (r.isLocalGem) badges += `<span class="badge b-local">🌿 Local Gem</span>`;
+    if (isPer && per.romanticRating === 'perfect') badges += `<span class="badge b-gem">❤️ Highly Romantic</span>`;
+    if (isPer && foodieChipsSelected()) badges += `<span class="badge b-foodie">🍴 Foodie Pick</span>`;
+    if (!isPer && bizFeatures.length) badges += `<span class="badge b-biz">💼 Business Ready</span>`;
+    if (accessNeeds.includes('service_animal')) badges += `<span class="badge b-access">🦮 Service Animal Info</span>`;
+
+    // Biz detail panel
+    let bizHtml = '';
+    if (!isPer) {
+      const nmap = {quiet:'🤫 Quiet', moderate:'🔈 Moderate', lively:'🔊 Lively'};
+      const dmap = {formal:'👔 Formal',  'business casual':'Business Casual', 'smart casual':'Smart Casual', casual:'Casual'};
+      const items = [];
+      if (biz.noiseLevel) items.push(`<div class="dp-item">${nmap[biz.noiseLevel]||biz.noiseLevel}</div>`);
+      if (biz.privateRoom) items.push(`<div class="dp-item"><span class="${biz.privateRoom==='yes'?'dp-yes':biz.privateRoom==='no'?'dp-no':''}">${biz.privateRoom==='yes'?'✓ Private room':biz.privateRoom==='no'?'✗ No private room':'? Private room: verify'}</span></div>`);
+      if (biz.wifi) items.push(`<div class="dp-item"><span class="${biz.wifi==='yes'?'dp-yes':biz.wifi==='no'?'dp-no':''}">${biz.wifi==='yes'?'✓ WiFi':biz.wifi==='no'?'✗ No WiFi':'? WiFi: verify'}</span></div>`);
+      if (biz.expenseFriendly) items.push(`<div class="dp-item"><span class="${biz.expenseFriendly==='yes'?'dp-yes':''}">${biz.expenseFriendly==='yes'?'✓ Expense-friendly':'? Ask about receipts'}</span></div>`);
+      if (biz.dressCode) items.push(`<div class="dp-item">${dmap[biz.dressCode]||biz.dressCode}</div>`);
+      if (biz.reservationRequired) items.push(`<div class="dp-item">${biz.reservationRequired==='yes'?'📅 Reservation required':biz.reservationRequired==='recommended'?'📅 Reservation recommended':'🚶 Walk-ins welcome'}</div>`);
+      if (items.length) bizHtml = `<div class="detail-panel"><div class="dp-title biz-color">💼 Business Details</div><div class="dp-grid">${items.join('')}</div></div>`;
+    }
+
+    // Personal foodie panel
+    let foodieHtml = '';
+    if (isPer && (per.bestForFoodieNote || per.hiddenDetail)) {
+      foodieHtml = `<div class="foodie-card-extra show"><div class="fce-title">🔍 Serious Eater Notes</div><div class="fce-body">`;
+      if (per.bestForFoodieNote) foodieHtml += `<p style="margin-bottom:.5rem">${per.bestForFoodieNote}</p>`;
+      if (per.hiddenDetail) foodieHtml += `<p><strong style="color:var(--per-primary)">Insider:</strong> ${per.hiddenDetail}</p>`;
+      foodieHtml += `</div></div>`;
+    }
+
+    // Access panel — with full menu spectrum table
+    let accHtml = '';
+    const accItems = [];
+    if (acc.serviceAnimal) accItems.push(`<div class="dp-row"><strong>🦮 Service Animal:</strong> ${acc.serviceAnimal}</div>`);
+    if (acc.wheelchairAccess) accItems.push(`<div class="dp-row"><strong>♿ Wheelchair:</strong> ${acc.wheelchairAccess}</div>`);
+    if (acc.lowVision) accItems.push(`<div class="dp-row"><strong>👁 Low Vision:</strong> ${acc.lowVision}</div>`);
+    if (acc.hearing) accItems.push(`<div class="dp-row"><strong>👂 Hearing:</strong> ${acc.hearing}</div>`);
+    if (acc.sensory) accItems.push(`<div class="dp-row"><strong>🔇 Sensory:</strong> ${acc.sensory}</div>`);
+
+    // Build menu spectrum table if requested
+    let menuSpectrumHtml = '';
+    if (acc.menuAccessibility) {
+      const ma = acc.menuAccessibility;
+      const statusClass = v => v === 'verified' ? 'status-verified' : v && v.includes('link') ? 'status-auto' : v === 'rare' ? 'status-rare' : 'status-unknown';
+      const statusLabel = v => {
+        if (!v || v === 'unknown') return 'Unknown';
+        if (v === 'verified') return '✓ Verified';
+        if (v.includes('not confirmed')) return 'Not Confirmed';
+        if (v.includes('link') || v.includes('http')) return '🔗 Linked';
+        return v.charAt(0).toUpperCase() + v.slice(1);
+      };
+      const rows = [
+        ['⠿', 'Braille Menu',                'Blind / Braille readers',       ma.brailleMenu],
+        ['🔡', 'Large Print (18pt+)',          'Low vision',                    ma.largePrint],
+        ['📱', 'Digital / Screen Reader',      'Blind / low vision',            ma.digitalScreenReader],
+        ['📷', 'QR Code Menu',                 'Various — if accessible',       ma.qrCode],
+        ['🔊', 'Audio from Staff',             'Blind / low vision',            ma.audioFromStaff],
+        ['📲', 'App Menu (Pre-Visit)',          'All — plan ahead',              ma.appMenuPreVisit],
+        ['✋', 'Tactile Menu',                 'Blind users',                   ma.tactileMenu],
+        ['◑',  'High Contrast Print',          'Low vision',                    ma.highContrastPrint],
+      ];
+      const rowsHtml = rows.map(([icon, name, who, val]) => `
+        <div class="spectrum-row">
+          <div class="spectrum-name">${icon} ${name}</div>
+          <div class="spectrum-who">${who}</div>
+          <span class="spectrum-status ${statusClass(val)}">${statusLabel(val)}</span>
+        </div>`).join('');
+
+      // Determine if any type is confirmed — if none, show request button
+      const anyConfirmed = rows.some(([,,, val]) => val === 'verified');
+      const requestBtn = !anyConfirmed
+        ? `<div style="padding:.9rem 1rem;background:rgba(184,149,74,.07);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+            <div style="font-size:.8rem;color:var(--warm-gray)">No accessible menu options confirmed for this restaurant.</div>
+            <button onclick="openMenuModal('${r.name.replace(/'/g,"\\'")}', '${(r.neighborhood||'').replace(/'/g,"\\'")}', '${city}')" style="padding:.45rem 1.1rem;background:var(--primary);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:background .4s" onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter=''">📋 Request Accessible Menu</button>
+           </div>`
+        : `<div style="padding:.7rem 1rem;background:rgba(78,122,66,.06);border-top:1px solid rgba(78,122,66,.15);font-size:.78rem;color:var(--sage)">✓ Accessible menu options confirmed. ${ma.overallNote||''}</div>`;
+
+      menuSpectrumHtml = `
+        <div style="margin-top:.9rem">
+          <div class="menu-spectrum">
+            <div class="menu-spectrum-title">📋 Menu Accessibility Spectrum</div>
+            ${rowsHtml}
+          </div>
+          ${requestBtn}
+        </div>`;
+    }
+
+    if (accItems.length || menuSpectrumHtml) {
+      accHtml = `<div class="detail-panel" role="region" aria-label="Accessibility info">
+        <div class="dp-title acc-color">♿ Accessibility &amp; Access Notes</div>
+        <div class="dp-col">${accItems.join('')}</div>
+        ${menuSpectrumHtml}
+        <p style="font-size:.7rem;color:var(--mid-gray);margin-top:.75rem;padding:.5rem .65rem;border-left:2px solid var(--accent);background:rgba(184,149,74,.06);line-height:1.5">⚠️ <strong>Resource only — not legal advice.</strong> Laws, policies, and local enforcement change. Always confirm accessibility and service animal policies directly with the restaurant before your visit.</p>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="r-card-stripe"></div>
+      <div class="r-card-body">
+        <div class="r-card-rank" style="${rs.style}">${r.rank}</div>
+        <div class="r-header">
+          <div>
+            <h4 class="r-name">${r.name}<small>📍 ${r.neighborhood}</small></h4>
+          </div>
+          <div class="badges" role="list">${badges}</div>
+        </div>
+        <p class="r-why">${r.whyGo}</p>
+      </div>
+      ${bizHtml}
+      ${foodieHtml}
+      ${accHtml}
+      <div class="r-card-bottom">
+        <div class="must-order"><div class="must-order-lbl">Must Order</div>${r.mustOrder}</div>
+        <div class="pro-tip"><span aria-hidden="true">💡</span><span>${r.proTip}</span></div>
+      </div>
+      <div class="r-card-actions">
+        <button class="btn-save" onclick="saveRestaurant(this,'${r.name.replace(/'/g,"\\'")}','${r.neighborhood.replace(/'/g,"\\'")}','${r.cuisine}','${mode}')" aria-label="Save ${r.name}">🔖 Save</button>
+        <button class="btn-itin-add" id="itin-btn-${i}" onclick="toggleItinItem(this,'${r.name.replace(/'/g,"\\'")}','${r.neighborhood.replace(/'/g,"\\'")}','${r.cuisine}','${r.priceRange}','${mode}')" aria-label="Add ${r.name} to itinerary">+ Itinerary</button>
+        <button class="btn-share-card" onclick="shareOne('${r.name.replace(/'/g,"\\'")}','${city}')" aria-label="Share ${r.name}">📤 Share</button>
+      </div>`;
+
+    wrap.appendChild(card);
+    setTimeout(() => card.classList.add('visible'), 100 + i * 160);
+  });
+
+  container.appendChild(wrap);
+  document.getElementById('reset-btn').style.display = 'block';
+  document.getElementById('find-btn').disabled = false;
+}
+
+function foodieChipsSelected() {
+  return document.querySelectorAll('#foodie-chips .chip.selected').length > 0;
+}
+
+/* ══ SAVE / SHARE ══ */
+function saveRestaurant(btn, name, neighborhood, cuisine, savedMode) {
+  const idx = savedList.findIndex(r => r.name === name);
+  if (idx >= 0) {
+    savedList.splice(idx, 1);
+    btn.classList.remove('saved');
+    btn.innerHTML = '🔖 Save';
+    announce(`${name} removed`);
+  } else {
+    savedList.push({ name, neighborhood, cuisine, mode: savedMode, date: new Date().toLocaleDateString() });
+    btn.classList.add('saved');
+    btn.innerHTML = '✓ Saved';
+    announce(`${name} saved`);
+  }
+  localStorage.setItem('tp-saved', JSON.stringify(savedList));
+  updateSavedUI();
+}
+
+function updateSavedUI() {
+  const n = savedList.length;
+  document.getElementById('fab-ct').textContent = n;
+  document.getElementById('saved-nav-ct').textContent = n;
+  document.getElementById('saved-fab').style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('saved-nav-btn').style.display = n > 0 ? 'flex' : 'none';
+  const body = document.getElementById('saved-body');
+  if (!n) { body.innerHTML = '<div class="saved-empty">No saved restaurants yet.<br>Tap 🔖 on any card.</div>'; return; }
+  body.innerHTML = savedList.map((r,i) => `
+    <div class="saved-item">
+      <div class="si-name">${r.name}</div>
+      <div class="si-meta">${r.cuisine} · ${r.neighborhood}</div>
+      <div class="si-mode" style="background:${r.mode==='personal'?'var(--per-primary)':'#1a2f4e'}">${r.mode==='personal'?'🍷 Personal':'💼 Business'}</div>
+      <span class="si-remove" onclick="removeSaved(${i})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')removeSaved(${i})" aria-label="Remove ${r.name}">✕ Remove</span>
+    </div>`).join('');
+}
+
+function removeSaved(i) {
+  const name = savedList[i].name;
+  savedList.splice(i, 1);
+  localStorage.setItem('tp-saved', JSON.stringify(savedList));
+  updateSavedUI();
+  announce(`${name} removed`);
+}
+
+function toggleSavedPanel() {
+  const open = document.getElementById('saved-panel').classList.toggle('open');
+  announce(open ? 'Saved panel open' : 'Saved panel closed');
+}
+
+function shareOne(name, city) {
+  const text = `${name} in ${city} — found via TablePassport 🍽️ tablepassport.com`;
+  if (navigator.share) { navigator.share({ title: name, text }); }
+  else { navigator.clipboard.writeText(text).then(() => announce('Copied!')); }
+}
+
+function shareAll() {
+  if (!savedList.length) return;
+  const text = `My TablePassport picks:\n` + savedList.map(r=>`• ${r.name} (${r.cuisine}, ${r.neighborhood})`).join('\n') + `\n\ntablepassport.com`;
+  if (navigator.share) { navigator.share({ title: 'My TablePassport List', text }); }
+  else { navigator.clipboard.writeText(text).then(() => announce('List copied!')); }
+}
+
+updateSavedUI();
+
+/* ══ MENU ACCESSIBILITY REQUEST MODAL ══ */
+let currentModalRestaurant = {};
+
+function openMenuModal(name, neighborhood, city) {
+  currentModalRestaurant = { name, neighborhood, city };
+  document.getElementById('modal-restaurant-name').textContent = `${name} · ${neighborhood}, ${city}`;
+  document.getElementById('email-preview-wrap').style.display = 'none';
+  document.getElementById('req-date').value = '';
+  document.getElementById('req-name').value = '';
+  // Reset need chips
+  document.querySelectorAll('#need-chips .need-chip').forEach((c,i) => {
+    c.classList.toggle('selected', i === 0);
+  });
+  document.getElementById('menu-request-modal').classList.add('open');
+  announce(`Menu accessibility request panel open for ${name}`);
+}
+
+function closeMenuModal() {
+  document.getElementById('menu-request-modal').classList.remove('open');
+  announce('Menu request panel closed');
+}
+
+// Close on overlay click
+document.getElementById('menu-request-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeMenuModal();
+});
+
+// Need chip toggles in modal
+document.querySelectorAll('#need-chips .need-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    chip.classList.toggle('selected');
+  });
+});
+
+function submitMenuRequest() {
+  const sendEmail  = document.getElementById('ro-send').checked;
+  const flagOutreach = document.getElementById('ro-flag').checked;
+  const wantMenu   = document.getElementById('ro-menu').checked;
+  const showRes    = document.getElementById('ro-resource').checked;
+  const visitDate  = document.getElementById('req-date').value;
+  const userName   = document.getElementById('req-name').value.trim() || 'A TablePassport User';
+  const needs      = [...document.querySelectorAll('#need-chips .need-chip.selected')].map(c=>c.dataset.val);
+  const { name, city } = currentModalRestaurant;
+
+  if (!sendEmail && !flagOutreach && !wantMenu && !showRes) {
+    announce('Please select at least one option');
+    return;
+  }
+
+  if (sendEmail && needs.length > 0) {
+    const dateStr = visitDate ? new Date(visitDate + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '[your visit date]';
+    const needsList = needs.map(n => `  • A ${n}`).join('\n');
+    const emailText =
+`Subject: Accessibility Request — Upcoming Visit${visitDate ? ' on ' + dateStr : ''}
+
+Dear ${name} Team,
+
+I have a reservation at your restaurant${visitDate ? ' on ' + dateStr : ''} and I am very much looking forward to my visit.
+
+I am visually impaired and would like to request an accessible menu option for my visit. Specifically, I am requesting:
+
+${needsList}
+
+If you do not currently offer these options, I would be glad to help. TablePassport offers free resources for restaurants who wish to create accessible menus quickly and easily — including free Braille transcription, large print templates, and a 15-minute guide to creating a screen-reader friendly digital menu.
+
+Please see: tablepassport.com/restaurant-resources
+
+Thank you for your consideration. Accessible dining experiences make an enormous difference to our community, and I look forward to visiting.
+
+Warm regards,
+${userName}
+
+---
+Sent via TablePassport Accessibility Request System
+tablepassport.com`;
+
+    document.getElementById('email-preview-text').textContent = emailText;
+    document.getElementById('email-preview-wrap').style.display = 'block';
+  }
+
+  if (flagOutreach) {
+    // In production this would POST to an API; for now we acknowledge it
+    announce(`${name} flagged for TablePassport accessibility outreach`);
+  }
+  if (showRes) {
+    closeMenuModal();
+    setTimeout(() => {
+      document.getElementById('resource-center').scrollIntoView({ behavior:'smooth' });
+      announce('Scrolled to Restaurant Resource Center');
+    }, 300);
+    return;
+  }
+
+  announce(sendEmail ? 'Email generated — copy and send it to the restaurant' : 'Request submitted');
+}
+
+function copyEmail() {
+  const text = document.getElementById('email-preview-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    announce('Email copied to clipboard');
+  });
+}
+
+/* ══ RESTAURANT RESOURCE CENTER ══ */
+function rcLink(type) {
+  const links = {
+    nbp:          'https://www.nbp.org',
+    transcription:'https://www.brailleauthority.org',
+    digital:      '#resource-center',
+    template:     '#resource-center',
+    register:     '#resource-center'
+  };
+  const url = links[type] || '#';
+  if (url.startsWith('http')) {
+    window.open(url, '_blank', 'noopener');
+  } else {
+    announce('This feature will be available when TablePassport launches. Coming soon!');
+  }
+}
+
+/* ══ RESET ══ */
+function resetForm() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('r-cards').innerHTML = '';
+  document.querySelectorAll('.chip').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-checked','false'); });
+  document.querySelectorAll('input[name="acc"]').forEach(c => c.checked = false);
+  goTab(0);
+  document.getElementById('finder').scrollIntoView({ behavior:'smooth' });
+  announce('Form reset. Ready for a new search.');
+}
+
+/* ══════════════════════════════════════════
+   A11Y DRAWER
+══════════════════════════════════════════ */
+function openA11yDrawer() {
+  document.getElementById('a11y-drawer').classList.add('open');
+  announce('Accessibility settings panel open');
+}
+function closeA11yDrawer() {
+  document.getElementById('a11y-drawer').classList.remove('open');
+  announce('Accessibility settings panel closed');
+}
+
+/* ══════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════ */
+function toggleA11y(type) {
+  const body = document.body;
+  if (type === 'hc') {
+    const on = body.classList.toggle('high-contrast');
+    document.getElementById('btn-hc').setAttribute('aria-pressed', on);
+    const drawerEl = document.getElementById('drawer-hc');
+    if (drawerEl) drawerEl.checked = on;
+    localStorage.setItem('tp-hc', on);
+    announce(on ? 'High contrast on' : 'High contrast off');
+  } else if (type === 'dark') {
+    const on = body.classList.toggle('dark-mode');
+    document.getElementById('btn-dark').setAttribute('aria-pressed', on);
+    const drawerEl = document.getElementById('drawer-dark');
+    if (drawerEl) drawerEl.checked = on;
+    localStorage.setItem('tp-dark', on);
+    announce(on ? 'Dark mode on' : 'Dark mode off');
+  } else if (type === 'dyslexia') {
+    const on = body.classList.toggle('dyslexia-font');
+    const drawerEl = document.getElementById('drawer-dyslexia');
+    if (drawerEl) drawerEl.checked = on;
+    localStorage.setItem('tp-dyslexia', on);
+    announce(on ? 'Dyslexia-friendly font on' : 'Standard font restored');
+  } else if (type === 'motion') {
+    const on = body.classList.toggle('reduce-motion');
+    const drawerEl = document.getElementById('drawer-motion');
+    if (drawerEl) drawerEl.checked = on;
+    localStorage.setItem('tp-motion', on);
+    announce(on ? 'Reduce motion on' : 'Animations restored');
+  }
+}
+
+/* ══════════════════════════════════════════
+   TEXT SIZING (4 levels)
+══════════════════════════════════════════ */
+const TEXT_SIZES = [
+  { cls:'text-sm',  label:'S', desc:'Small' },
+  { cls:'text-md',  label:'M', desc:'Medium (default)' },
+  { cls:'text-lg',  label:'L', desc:'Large' },
+  { cls:'text-xl',  label:'XL',desc:'Extra Large' },
+];
+let currentTextSize = 1;
+
+function applyTextSize(idx) {
+  TEXT_SIZES.forEach(s => document.body.classList.remove(s.cls));
+  document.body.classList.add(TEXT_SIZES[idx].cls);
+  currentTextSize = idx;
+  const lbl = TEXT_SIZES[idx].label;
+  const desc = TEXT_SIZES[idx].desc;
+  document.getElementById('ts-indicator').textContent = lbl;
+  const dd = document.getElementById('drawer-ts-display');
+  const dl = document.getElementById('drawer-ts-label');
+  if (dd) dd.textContent = lbl;
+  if (dl) dl.textContent = desc;
+  localStorage.setItem('tp-textsize', idx);
+  announce(`Text size: ${desc}`);
+}
+function changeTextSize(dir) {
+  const next = Math.max(0, Math.min(3, currentTextSize + dir));
+  applyTextSize(next);
+}
+function setTextSize(idx) { applyTextSize(idx); }
+
+/* Restore all preferences on load */
+(function restorePrefs() {
+  if (localStorage.getItem('tp-hc') === 'true')       { document.body.classList.add('high-contrast'); document.getElementById('btn-hc').setAttribute('aria-pressed','true'); setTimeout(()=>{ const el=document.getElementById('drawer-hc'); if(el)el.checked=true; },100); }
+  if (localStorage.getItem('tp-dark') === 'true')     { document.body.classList.add('dark-mode'); document.getElementById('btn-dark').setAttribute('aria-pressed','true'); setTimeout(()=>{ const el=document.getElementById('drawer-dark'); if(el)el.checked=true; },100); }
+  if (localStorage.getItem('tp-dyslexia') === 'true') { document.body.classList.add('dyslexia-font'); setTimeout(()=>{ const el=document.getElementById('drawer-dyslexia'); if(el)el.checked=true; },100); }
+  if (localStorage.getItem('tp-motion') === 'true')   { document.body.classList.add('reduce-motion'); setTimeout(()=>{ const el=document.getElementById('drawer-motion'); if(el)el.checked=true; },100); }
+  const savedSize = parseInt(localStorage.getItem('tp-textsize') ?? '1');
+  applyTextSize(isNaN(savedSize) ? 1 : savedSize);
+  // Respect OS reduce motion preference
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.body.classList.add('reduce-motion');
+  }
+})();
+
+/* ══════════════════════════════════════════
+   TRIP ITINERARY BUILDER
+══════════════════════════════════════════ */
+let itinerary = JSON.parse(localStorage.getItem('tp-itinerary') || '[]');
+
+function toggleItinPanel() {
+  const panel = document.getElementById('itin-panel');
+  const open = panel.classList.toggle('open');
+  renderItinerary();
+  announce(open ? 'Trip itinerary panel open' : 'Trip itinerary panel closed');
+}
+
+function toggleItinItem(btn, name, neighborhood, cuisine, price, savedMode) {
+  const idx = itinerary.findIndex(r => r.name === name);
+  if (idx >= 0) {
+    itinerary.splice(idx, 1);
+    btn.classList.remove('in-itin');
+    btn.innerHTML = '+ Itinerary';
+    announce(`${name} removed from itinerary`);
+  } else {
+    itinerary.push({ name, neighborhood, cuisine, price, mode: savedMode, note: '' });
+    btn.classList.add('in-itin');
+    btn.innerHTML = '✓ In Trip';
+    announce(`${name} added to itinerary`);
+  }
+  localStorage.setItem('tp-itinerary', JSON.stringify(itinerary));
+  renderItinerary();
+  // Show panel if first item added
+  if (itinerary.length === 1) {
+    document.getElementById('itin-panel').classList.add('open');
+  }
+}
+
+function renderItinerary() {
+  const container = document.getElementById('itin-items');
+  const empty = document.getElementById('itin-empty');
+  if (!itinerary.length) {
+    if (empty) empty.style.display = 'block';
+    // Clear all but empty notice
+    [...container.children].forEach(c => { if (c.id !== 'itin-empty') c.remove(); });
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  // Rebuild
+  [...container.children].forEach(c => { if (c.id !== 'itin-empty') c.remove(); });
+  itinerary.forEach((r, i) => {
+    const el = document.createElement('div');
+    el.className = 'itin-item';
+    el.setAttribute('draggable', 'true');
+    el.setAttribute('data-index', i);
+    el.innerHTML = `
+      <div class="itin-item-num">${i + 1}</div>
+      <div class="itin-item-name">${r.name}</div>
+      <div class="itin-item-meta">${r.cuisine} · ${r.price} · ${r.neighborhood}</div>
+      <div class="itin-item-mode" style="background:${r.mode==='personal'?'var(--per-primary)':'#1a2f4e'}">${r.mode==='personal'?'🍷 Personal':'💼 Business'}</div>
+      <textarea class="itin-note-input" placeholder="Add notes, time, or reservation info…" aria-label="Notes for ${r.name}" onchange="updateItinNote(${i}, this.value)">${r.note||''}</textarea>
+      <div class="itin-item-actions">
+        <button class="itin-action-btn" onclick="moveItin(${i},-1)" aria-label="Move up" ${i===0?'disabled':''}>↑ Up</button>
+        <button class="itin-action-btn" onclick="moveItin(${i},1)" aria-label="Move down" ${i===itinerary.length-1?'disabled':''}>↓ Down</button>
+        <button class="itin-action-btn" style="color:var(--hot)" onclick="removeItin(${i})" aria-label="Remove ${r.name}">✕ Remove</button>
+      </div>`;
+    container.appendChild(el);
+  });
+}
+
+function updateItinNote(idx, val) {
+  if (itinerary[idx]) itinerary[idx].note = val;
+  localStorage.setItem('tp-itinerary', JSON.stringify(itinerary));
+}
+
+function moveItin(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= itinerary.length) return;
+  [itinerary[idx], itinerary[newIdx]] = [itinerary[newIdx], itinerary[idx]];
+  localStorage.setItem('tp-itinerary', JSON.stringify(itinerary));
+  renderItinerary();
+}
+
+function removeItin(idx) {
+  const name = itinerary[idx].name;
+  itinerary.splice(idx, 1);
+  localStorage.setItem('tp-itinerary', JSON.stringify(itinerary));
+  renderItinerary();
+  announce(`${name} removed from itinerary`);
+}
+
+function clearItinerary() {
+  if (!confirm('Clear your entire itinerary?')) return;
+  itinerary = [];
+  localStorage.setItem('tp-itinerary', JSON.stringify(itinerary));
+  renderItinerary();
+  announce('Itinerary cleared');
+}
+
+function exportItinerary() {
+  if (!itinerary.length) return;
+  const tripName = document.getElementById('itin-trip-name').value.trim() || 'My TablePassport Trip';
+  const lines = [`${tripName}\nBuilt with TablePassport — tablepassport.com\n${'─'.repeat(40)}\n`];
+  itinerary.forEach((r, i) => {
+    lines.push(`${i + 1}. ${r.name}`);
+    lines.push(`   ${r.cuisine} · ${r.price} · ${r.neighborhood}`);
+    if (r.note) lines.push(`   📝 ${r.note}`);
+    lines.push('');
+  });
+  const text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: tripName, text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => announce('Trip plan copied to clipboard!'));
+  }
+}
+
+/* ══════════════════════════════════════════
+   PHRASE CARDS — 30 languages
+══════════════════════════════════════════ */
+const PHRASES = [
+  { lang:'English', flag:'🇺🇸', phrases:[
+    { en:'I have a guide dog / service animal.', local:'I have a guide dog / service animal.', phonetic:'' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'My dog is a trained guide dog and must stay with me.', phonetic:'' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Is your restaurant accessible for guide dogs?', phonetic:'' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Could you please bring a bowl of water for my dog?', phonetic:'' },
+  ]},
+  { lang:'Spanish', flag:'🇪🇸', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Tengo un perro guía / animal de asistencia.', phonetic:'Ten-go oon PEH-ro GEE-ah' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Mi perro es un perro guía entrenado y debe quedarse conmigo.', phonetic:'Mee PEH-ro es oon PEH-ro GEE-ah en-tren-AH-do' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'¿Su restaurante es accesible para perros guía?', phonetic:'Soo res-tau-RAN-teh es ak-se-SEE-bleh' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'¿Podría traer un cuenco de agua para mi perro?', phonetic:'Po-DREE-ah tra-EHR oon KWEN-ko' },
+  ]},
+  { lang:'French', flag:'🇫🇷', phrases:[
+    { en:'I have a guide dog / service animal.', local:'J\'ai un chien guide / animal d\'assistance.', phonetic:'Zhay uhn shee-AN geed' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Mon chien est un chien guide dressé et doit rester avec moi.', phonetic:'Mohn shee-AN eh uhn shee-AN geed dres-AY' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Votre restaurant est-il accessible aux chiens guides?', phonetic:'Voh-truh res-toh-RAHN eh-teel ak-seh-SEE-bluh' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Pourriez-vous apporter un bol d\'eau pour mon chien?', phonetic:'Poo-ree-ay voo ah-por-TAY uhn bol doh' },
+  ]},
+  { lang:'German', flag:'🇩🇪', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Ich habe einen Blindenhund / Assistenzhund.', phonetic:'Ikh HA-buh EYE-nen BLIN-den-hoont' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Mein Hund ist ein ausgebildeter Blindenhund und muss bei mir bleiben.', phonetic:'Mine hoont ist ein OWS-ge-bil-deh-ter BLIN-den-hoont' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Ist Ihr Restaurant für Blindenhunde zugänglich?', phonetic:'Ist eer res-toh-RAHNT fyur BLIN-den-hoon-duh' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Könnten Sie bitte eine Wasserschale für meinen Hund bringen?', phonetic:'KER-nen zee BIT-tuh EYE-nuh VAS-ser-sha-luh' },
+  ]},
+  { lang:'Italian', flag:'🇮🇹', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Ho un cane guida / animale da assistenza.', phonetic:'Oh oon KAH-neh GWEE-dah' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Il mio cane è un cane guida addestrato e deve restare con me.', phonetic:'Eel MEE-oh KAH-neh eh oon KAH-neh GWEE-dah' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Il vostro ristorante è accessibile ai cani guida?', phonetic:'Eel VOS-troh ree-sto-RAN-teh eh at-ches-EE-bee-leh' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Potrebbe portare una ciotola d\'acqua per il mio cane?', phonetic:'Po-TREH-beh por-TAR-eh OO-nah cho-TO-lah' },
+  ]},
+  { lang:'Portuguese', flag:'🇧🇷', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Tenho um cão-guia / animal de assistência.', phonetic:'TEN-yoo oong KAN-gwee-ah' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Meu cão é um cão-guia treinado e deve ficar comigo.', phonetic:'Meh-oo KAN eh oong KAN-gwee-ah tray-NAH-doo' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'O seu restaurante é acessível para cães-guia?', phonetic:'Oh sew hes-tow-RAN-chee eh ah-ses-EE-vel' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Poderia trazer uma tigela de água para o meu cão?', phonetic:'Po-deh-REE-ah tra-ZEHR OO-mah tee-ZHEH-lah' },
+  ]},
+  { lang:'Japanese', flag:'🇯🇵', phrases:[
+    { en:'I have a guide dog / service animal.', local:'私は盲導犬/補助犬を連れています。', phonetic:'Watashi wa mō-dō-ken / ho-jo-ken wo tsurete imasu.' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'この犬は訓練された盲導犬です。一緒にいる必要があります。', phonetic:'Kono inu wa kunren sareta mō-dō-ken desu.' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'盲導犬を連れて入店できますか？', phonetic:'Mō-dō-ken wo tsurete nyūten dekimasu ka?' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'犬のために水を一杯いただけますか？', phonetic:'Inu no tame ni mizu wo ippai itadakemasu ka?' },
+  ]},
+  { lang:'Mandarin Chinese', flag:'🇨🇳', phrases:[
+    { en:'I have a guide dog / service animal.', local:'我有一只导盲犬/服务动物。', phonetic:'Wǒ yǒu yī zhī dǎomángquǎn' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'我的狗是经过训练的导盲犬，必须陪在我身边。', phonetic:'Wǒ de gǒu shì jīngguò xùnliàn de dǎomángquǎn' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'您的餐厅允许导盲犬进入吗？', phonetic:'Nín de cāntīng yǔnxǔ dǎomángquǎn jìnrù ma?' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'请给我的狗送一碗水，可以吗？', phonetic:'Qǐng gěi wǒ de gǒu sòng yī wǎn shuǐ' },
+  ]},
+  { lang:'Arabic', flag:'🇸🇦', phrases:[
+    { en:'I have a guide dog / service animal.', local:'لدي كلب إرشادي / حيوان خدمة.', phonetic:'La-day-ya kalb ir-sha-dee / hay-a-wan khid-mah' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'كلبي كلب إرشادي مدرَّب ويجب أن يبقى معي.', phonetic:'Kal-bee kalb ir-sha-dee mu-dar-rab wa-ya-jib an yab-qa ma\'ee' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'هل مطعمكم يسمح بدخول كلاب الإرشاد؟', phonetic:'Hal mat-am-kum yas-mah bi-du-khool ki-lab al-ir-shad?' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'هل يمكنكم إحضار وعاء ماء لكلبي؟', phonetic:'Hal yum-kin-kum ih-dar wa-a\' ma\' li-kal-bee?' },
+  ]},
+  { lang:'Korean', flag:'🇰🇷', phrases:[
+    { en:'I have a guide dog / service animal.', local:'저는 안내견/보조 동물을 데리고 있습니다.', phonetic:'Jeo-neun an-nae-gyeon / bo-jo dong-mul-eul de-ri-go it-sum-ni-da' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'제 개는 훈련된 안내견이며 저와 함께 있어야 합니다.', phonetic:'Je gae-neun hun-ryeon-doen an-nae-gyeon-i-myeo' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'안내견을 데리고 입장할 수 있나요?', phonetic:'An-nae-gyeon-eul de-ri-go ip-jang-hal su it-na-yo?' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'개에게 물 한 그릇 가져다 주실 수 있나요?', phonetic:'Gae-e-ge mul han geu-reut ga-jyeo-da ju-sil su it-na-yo?' },
+  ]},
+  { lang:'Dutch', flag:'🇳🇱', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Ik heb een blindengeleidehond / assistentiehond.', phonetic:'Ik heb eyn BLIN-den-khuh-lay-duh-hont' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Mijn hond is een getrainde geleidehond en moet bij mij blijven.', phonetic:'Mijn hont is eyn khuh-TRAYN-duh khuh-LAY-duh-hont' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Is uw restaurant toegankelijk voor geleidehonden?', phonetic:'Is oow res-toh-RAHNT too-KHANK-uh-luk vohr' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Kunt u een bakje water voor mijn hond brengen?', phonetic:'Kunt oo eyn BAK-yuh VAH-ter vohr mijn hont' },
+  ]},
+  { lang:'Swedish', flag:'🇸🇪', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Jag har en ledarhund / assistanshund.', phonetic:'Yahg har en LEH-dar-hoond' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Min hund är en tränad ledarhund och måste stanna hos mig.', phonetic:'Min hoond air en TRAY-nad LEH-dar-hoond' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Är er restaurang tillgänglig för ledarhundar?', phonetic:'Air ehr res-toh-RANG til-YENG-lig fer' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Kan ni ta med en skål vatten till min hund?', phonetic:'Kan nee tah mehd en skohl VAT-ten' },
+  ]},
+  { lang:'Polish', flag:'🇵🇱', phrases:[
+    { en:'I have a guide dog / service animal.', local:'Mam psa przewodnika / zwierzę wspomagające.', phonetic:'Mam psa psheh-VOD-nee-kah' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Mój pies jest wyszkolonym psem przewodnikiem i musi być ze mną.', phonetic:'Mooy pyes yest vish-KO-lo-nim psem psheh-VOD-nyeh-kem' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Czy pana restauracja jest dostępna dla psów przewodników?', phonetic:'Chih PAH-nah res-tow-RAT-syah yest dos-TEMP-nah' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Czy mógłby pan przynieść miseczkę wody dla mojego psa?', phonetic:'Chih MOOG-wbi pan pshin-YEHSHCH mee-SECH-keh' },
+  ]},
+  { lang:'Russian', flag:'🇷🇺', phrases:[
+    { en:'I have a guide dog / service animal.', local:'У меня собака-поводырь / служебная собака.', phonetic:'Oo men-YA so-BA-ka po-vo-DIRY' },
+    { en:'My dog is a trained guide dog and must stay with me.', local:'Моя собака — обученный поводырь и должна оставаться со мной.', phonetic:'Mo-YA so-BA-ka — o-BOO-chen-niy po-vo-DIRY' },
+    { en:'Is your restaurant accessible for guide dogs?', local:'Разрешён ли вход в ваш ресторан с собакой-поводырём?', phonetic:'Raz-re-SHON lee vkhod v vash res-to-RAN' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Не могли бы вы принести миску воды для моей собаки?', phonetic:'Neh mog-LEE bi vi pri-nes-TEE MIS-koo vo-DI' },
+  ]},
+];
+
+function renderPhrases(filter) {
+  const body = document.getElementById('phrase-body');
+  const f = (filter || '').toLowerCase();
+  let html = '';
+  PHRASES.forEach(langGroup => {
+    const matchingPhrases = langGroup.phrases.filter(p =>
+      !f ||
+      langGroup.lang.toLowerCase().includes(f) ||
+      p.local.toLowerCase().includes(f) ||
+      p.en.toLowerCase().includes(f)
+    );
+    if (!matchingPhrases.length) return;
+    html += `<div class="phrase-lang-section">
+      <div class="phrase-lang-title">${langGroup.flag} ${langGroup.lang}</div>`;
+    matchingPhrases.forEach(p => {
+      const escaped = p.local.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      html += `<div class="phrase-card">
+        <div class="phrase-text">
+          <div class="phrase-english">${p.en}</div>
+          <div class="phrase-local">${p.local}</div>
+          ${p.phonetic ? `<div class="phrase-phonetic">🔊 ${p.phonetic}</div>` : ''}
+        </div>
+        <button class="phrase-copy" onclick="copyPhrase('${escaped}')" aria-label="Copy phrase">Copy</button>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  body.innerHTML = html || '<p style="padding:2rem;text-align:center;color:var(--mid-gray)">No phrases match your search.</p>';
+}
+
+function filterPhrases(val) { renderPhrases(val); }
+
+function copyPhrase(text) {
+  navigator.clipboard.writeText(text).then(() => announce('Phrase copied!'));
+}
+
+function openPhraseCards() {
+  document.getElementById('phrase-modal').classList.add('open');
+  renderPhrases('');
+  announce('Service animal phrase cards open');
+}
+
+function closePhraseCards() {
+  document.getElementById('phrase-modal').classList.remove('open');
+  announce('Phrase cards closed');
+}
+
+// Close phrase modal on overlay click
+document.getElementById('phrase-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePhraseCards();
+});
+
+// ESC closes all panels
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeA11yDrawer();
+    closePhraseCards();
+    closeMenuModal();
+    document.getElementById('itin-panel').classList.remove('open');
+    document.getElementById('saved-panel').classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
