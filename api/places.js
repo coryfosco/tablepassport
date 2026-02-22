@@ -7,9 +7,11 @@ module.exports = async function handler(req, res) {
 
   try {
     let { lat, lng, radius, keyword, zipcode, city } = req.body;
+    let resolvedLocation = city || zipcode || 'Unknown';
 
-    // If no coordinates provided, geocode from zip or city
-    if ((!lat || !lng) && (zipcode || city)) {
+    // Use direct coordinates if provided (from browser geolocation)
+    // Otherwise geocode from zip or city
+    if (!lat || !lng) {
       const query = zipcode
         ? `postalcode=${encodeURIComponent(zipcode)}&countrycodes=us`
         : `q=${encodeURIComponent(city)}`;
@@ -20,9 +22,8 @@ module.exports = async function handler(req, res) {
       if (geoData && geoData.length > 0) {
         lat = parseFloat(geoData[0].lat);
         lng = parseFloat(geoData[0].lon);
-        // Return neighborhood name too
         const parts = geoData[0].display_name.split(',');
-        var resolvedLocation = parts.slice(0, 2).map(p => p.trim()).join(', ');
+        resolvedLocation = parts.slice(0, 2).map(p => p.trim()).join(', ');
       }
     }
 
@@ -59,7 +60,8 @@ module.exports = async function handler(req, res) {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    const withinRadius = searchData.results.filter(place => {
+    const withinRadius = (searchData.results || []).filter(place => {
+      if (!place.geometry) return false;
       const dist = haversineDistance(lat, lng,
         place.geometry.location.lat,
         place.geometry.location.lng
@@ -95,8 +97,10 @@ module.exports = async function handler(req, res) {
 
     res.status(200).json({
       places: detailed,
-      resolvedLocation: resolvedLocation || null,
-      lat, lng
+      resolvedLocation,
+      lat,
+      lng,
+      total: withinRadius.length
     });
 
   } catch (err) {
