@@ -1351,7 +1351,15 @@ body.reduce-motion *::after {
                 <input type="text" id="zipcode" placeholder="60613 · SW1A · M5H…" autocomplete="postal-code" inputmode="text" style="letter-spacing:.05em" oninput="handleLocationInput('zip')"/>
               </div>
             </div>
-            <span class="hint" style="display:block;margin-top:.4rem" id="location-hint">Enter a city name <em>or</em> a zip/postal code — not both</span>
+            <!-- State field — shows when city is entered -->
+            <div id="state-row" style="margin-top:.6rem;display:none">
+              <label for="state" style="font-size:.75rem;color:var(--warm-gray);margin-bottom:.3rem;display:block">State / Province <span style="color:var(--mid-gray);font-weight:400">(optional — helps narrow results for common city names)</span></label>
+              <input type="text" id="state" placeholder="e.g. IL · California · Ontario…" autocomplete="address-level1" style="max-width:280px"/>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-top:.5rem">
+              <span class="hint" id="location-hint">Enter a city name <em>or</em> a zip/postal code — not both</span>
+              <button type="button" onclick="useMyLocation()" id="geo-btn" style="background:none;border:1px solid var(--border);padding:.35rem .75rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--warm-gray);cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:all .2s" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--warm-gray)'">📍 Use my location</button>
+            </div>
           </div>
 
           <!-- Location reference -->
@@ -1449,6 +1457,7 @@ body.reduce-motion *::after {
               <button class="chip" data-val="a solo business traveler wanting comfort and quality" role="radio" aria-checked="false">🧍 Solo Business</button>
               <button class="chip" data-val="a conference or event dinner for a larger group" role="radio" aria-checked="false">🎤 Conference Dinner</button>
               <button class="chip" data-val="a personal dinner on a business trip — no work agenda, just a great meal" role="radio" aria-checked="false">🍽️ Personal Dinner</button>
+              <button class="chip" data-val="a casual quick bite — deli, sandwich, soup, or comfort food between meetings" role="radio" aria-checked="false">🥪 Quick Bite</button>
             </div>
           </div>
           <div class="form-group" style="margin-bottom:1.5rem">
@@ -1483,6 +1492,7 @@ body.reduce-motion *::after {
               <button class="chip" data-val="a relaxed weekend brunch" role="radio" aria-checked="false">☀️ Weekend Brunch</button>
               <button class="chip" data-val="a family meal — welcoming to children, relaxed, not stuffy" role="radio" aria-checked="false">👨‍👩‍👧 Family Dining</button>
               <button class="chip" data-val="a fun night out with friends — lively, shareable, convivial" role="radio" aria-checked="false">👯 Friends Night Out</button>
+              <button class="chip" data-val="a casual meal — deli, sandwich, soup, or comfort food with no fuss" role="radio" aria-checked="false">🥪 Casual / No Fuss</button>
             </div>
           </div>
           <div class="form-group" style="margin-bottom:1.75rem">
@@ -1535,6 +1545,7 @@ body.reduce-motion *::after {
             <label id="cui-lbl">Cuisine <span class="hint" style="display:inline">— all that apply</span></label>
             <div class="chip-row" id="cuisine-chips" role="group" aria-labelledby="cui-lbl">
               <button class="chip" data-val="local and traditional cuisine of the destination" role="checkbox" aria-checked="false">Local & Traditional</button>
+              <button class="chip" data-val="casual dining — deli, sandwich shop, cafe, or comfort food" role="checkbox" aria-checked="false">🥪 Casual / Deli</button>
               <button class="chip" data-val="Italian" role="checkbox" aria-checked="false">Italian</button>
               <button class="chip" data-val="Japanese" role="checkbox" aria-checked="false">Japanese</button>
               <button class="chip" data-val="French" role="checkbox" aria-checked="false">French</button>
@@ -2031,6 +2042,9 @@ function goTab(n) {
 async function findRestaurants() {
   const city        = document.getElementById('city').value.trim();
   const zipcode     = document.getElementById('zipcode').value.trim();
+  const state       = document.getElementById('state') ? document.getElementById('state').value.trim() : '';
+  const geoLat      = window._geoLat || null;
+  const geoLng      = window._geoLng || null;
 
   // Require either city or zip code
   if (!city && !zipcode) {
@@ -2148,7 +2162,9 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           zipcode: zipcode || null,
-          city: city || null,
+          city: city ? (state ? `${city}, ${state}` : city) : null,
+          lat: geoLat,
+          lng: geoLng,
           radius: radiusMeters,
           keyword: cuisineKeyword
         })
@@ -2653,10 +2669,68 @@ function rcLink(type) {
 function handleLocationInput(type) {
   if (type === 'city' && document.getElementById('city').value.trim()) {
     document.getElementById('zipcode').value = '';
+    document.getElementById('state-row').style.display = 'block';
   } else if (type === 'zip' && document.getElementById('zipcode').value.trim()) {
     document.getElementById('city').value = '';
+    document.getElementById('state').value = '';
+    document.getElementById('state-row').style.display = 'none';
+  }
+  if (!document.getElementById('city').value.trim()) {
+    document.getElementById('state-row').style.display = 'none';
   }
 }
+
+function useMyLocation() {
+  const btn = document.getElementById('geo-btn');
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+  btn.textContent = '📍 Locating…';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      // Store coords for Places API call
+      window._geoLat = latitude;
+      window._geoLng = longitude;
+      // Reverse geocode to get city name for display
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+        .then(r => r.json())
+        .then(d => {
+          const city = d.address.city || d.address.town || d.address.village || 'Current Location';
+          const state = d.address.state || '';
+          document.getElementById('city').value = city;
+          document.getElementById('zipcode').value = '';
+          if (state) {
+            document.getElementById('state').value = state;
+            document.getElementById('state-row').style.display = 'block';
+          }
+          btn.textContent = '📍 Location found';
+          btn.style.color = 'var(--sage)';
+          btn.style.borderColor = 'var(--sage)';
+          setTimeout(() => {
+            btn.textContent = '📍 Use my location';
+            btn.style.color = '';
+            btn.style.borderColor = '';
+            btn.disabled = false;
+          }, 2000);
+        })
+        .catch(() => {
+          document.getElementById('city').value = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          btn.textContent = '📍 Use my location';
+          btn.disabled = false;
+        });
+    },
+    (err) => {
+      btn.textContent = '📍 Use my location';
+      btn.disabled = false;
+      alert('Could not get your location. Please enter it manually.');
+    },
+    { timeout: 10000 }
+  );
+}
+
 
 function resetForm() {
   document.getElementById('results').style.display = 'none';
