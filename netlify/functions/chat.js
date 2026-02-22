@@ -5,6 +5,9 @@ exports.handler = async function(event) {
 
   try {
     const body = JSON.parse(event.body);
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -13,9 +16,11 @@ exports.handler = async function(event) {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: controller.signal
     });
 
+    clearTimeout(timeout);
     const text = await response.text();
 
     return {
@@ -31,7 +36,11 @@ exports.handler = async function(event) {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: err.message, stack: err.stack })
+      body: JSON.stringify({ 
+        error: err.message, 
+        type: err.name,
+        hasApiKey: !!process.env.ANTHROPIC_API_KEY
+      })
     };
   }
 }
