@@ -2155,6 +2155,7 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
     // Step 1 — Get real restaurants from Google Places (geocoding happens server-side)
     let googlePlaces = [];
     let finalLocation = resolvedLocation;
+    console.log('DEBUG location values:', { city, zipcode, geoLat, geoLng, radiusMeters });
     if (zipcode || city || geoLat) {
       const placesRes = await fetch('/api/places', {
         method: 'POST',
@@ -2983,4 +2984,5 @@ const PHRASES = [
   { lang:'German', flag:'🇩🇪', phrases:[
     { en:'I have a guide dog / service animal.', local:'Ich habe einen Blindenhund / Assistenzhund.', phonetic:'Ikh HA-buh EYE-nen BLIN-den-hoont' },
     { en:'My dog is a trained guide dog and must stay with me.', local:'Mein Hund ist ein ausgebildeter Blindenhund und muss bei mir bleiben.', phonetic:'Mine hoont ist ein OWS-ge-bil-deh-ter BLIN-den-hoont' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Ist Ihr Restaurant für Blindenhunde zugänglich?', phonetic:'Ist ee
+    { en:'Is your restaurant accessible for guide dogs?', local:'Ist Ihr Restaurant für Blindenhunde zugänglich?', phonetic:'Ist eer res-toh-RAHNT fyur BLIN-den-hoon-duh' },
+    { en:'Could you please bring a bowl of water for my dog?', local:'Könnten Sie bitte eine Wasserschale für meinen Hund bringen?', pho
