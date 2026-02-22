@@ -2672,9 +2672,12 @@ function rcLink(type) {
 
 /* ══ RESET ══ */
 function handleLocationInput(type) {
-  // Clear stored GPS coords when user types manually
-  window._geoLat = null;
-  window._geoLng = null;
+  // Only clear GPS coords if user is MANUALLY typing (not if geolocation just set the city)
+  if (!window._geoJustSet) {
+    window._geoLat = null;
+    window._geoLng = null;
+  }
+  window._geoJustSet = false;
   if (type === 'city' && document.getElementById('city').value.trim()) {
     document.getElementById('zipcode').value = '';
     document.getElementById('state-row').style.display = 'block';
@@ -2702,12 +2705,14 @@ function useMyLocation() {
       // Store coords for Places API call
       window._geoLat = latitude;
       window._geoLng = longitude;
+      window._geoJustSet = true; // prevent handleLocationInput from clearing coords
       // Reverse geocode to get city name for display
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
         .then(r => r.json())
         .then(d => {
           const city = d.address.city || d.address.town || d.address.village || 'Current Location';
           const state = d.address.state || '';
+          window._geoJustSet = true; // set again in case .then fires after handleLocationInput
           document.getElementById('city').value = city;
           document.getElementById('zipcode').value = '';
           if (state) {
@@ -2978,8 +2983,4 @@ const PHRASES = [
   { lang:'German', flag:'🇩🇪', phrases:[
     { en:'I have a guide dog / service animal.', local:'Ich habe einen Blindenhund / Assistenzhund.', phonetic:'Ikh HA-buh EYE-nen BLIN-den-hoont' },
     { en:'My dog is a trained guide dog and must stay with me.', local:'Mein Hund ist ein ausgebildeter Blindenhund und muss bei mir bleiben.', phonetic:'Mine hoont ist ein OWS-ge-bil-deh-ter BLIN-den-hoont' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Ist Ihr Restaurant für Blindenhunde zugänglich?', phonetic:'Ist eer res-toh-RAHNT fyur BLIN-den-hoon-duh' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Könnten Sie bitte eine Wasserschale für meinen Hund bringen?', phonetic:'KER-nen zee BIT-tuh EYE-nuh VAS-ser-sha-luh' },
-  ]},
-  { lang:'Italian', flag:'🇮🇹', phrases:[
-    { en:'I have a 
+    { en:'Is your restaurant accessible for guide dogs?', local:'Ist Ihr Restaurant für Blindenhunde zugänglich?', phonetic:'Ist ee
