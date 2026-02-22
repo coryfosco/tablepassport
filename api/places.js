@@ -6,12 +6,11 @@ module.exports = async function handler(req, res) {
   const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 
   try {
-    const { lat, lng, radius, keyword, type } = req.body;
+    const { lat, lng, radius, keyword } = req.body;
 
-    // Search nearby restaurants using Google Places Nearby Search
     const params = new URLSearchParams({
       location: `${lat},${lng}`,
-      radius: radius || 400, // default ~5 min walk = 400 meters
+      radius: radius || 400,
       type: 'restaurant',
       key: GOOGLE_KEY
     });
@@ -27,8 +26,30 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: searchData.status, message: searchData.error_message });
     }
 
-    // Get details for top results
-    const places = searchData.results.slice(0, 10);
+    // Filter results to strictly enforce radius using Haversine distance
+    function haversineDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371000; // meters
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // Filter to only restaurants within the requested radius
+    const withinRadius = searchData.results.filter(place => {
+      const dist = haversineDistance(
+        lat, lng,
+        place.geometry.location.lat,
+        place.geometry.location.lng
+      );
+      return dist <= (radius || 400);
+    });
+
+    const places = withinRadius.slice(0, 10);
+
+    // Get details for each place
     const detailed = await Promise.all(places.map(async (place) => {
       const detailParams = new URLSearchParams({
         place_id: place.place_id,
@@ -49,14 +70,14 @@ module.exports = async function handler(req, res) {
         website: d.website || null,
         rating: place.rating,
         reviewCount: place.user_ratings_total,
-        priceLevel: place.price_level, // 0-4
+        priceLevel: place.price_level,
         openNow: place.opening_hours?.open_now,
         types: place.types,
         placeId: place.place_id
       };
     }));
 
-    res.status(200).json({ places: detailed });
+    res.status(200).json({ places: detailed, total: withinRadius.length });
 
   } catch (err) {
     console.error('Places error:', err);
