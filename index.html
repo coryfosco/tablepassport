@@ -1343,7 +1343,7 @@ body.reduce-motion *::after {
             <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;margin-top:.5rem">
               <div>
                 <label for="city" style="font-size:.75rem;color:var(--warm-gray);margin-bottom:.3rem;display:block">City</label>
-                <input type="text" id="city" placeholder="Chicago · Tokyo · Rome…" autocomplete="off" oninput="handleLocationInput('city')"/>
+                <input type="text" id="city" placeholder="Chicago · Tokyo · Rome…" autocomplete="nope" oninput="handleLocationInput('city')"/>
               </div>
               <div style="text-align:center;color:var(--mid-gray);font-size:.8rem;font-weight:600;padding-top:1.2rem">OR</div>
               <div>
@@ -2192,6 +2192,12 @@ Return ${resultCount} restaurants:
         try {
           restaurants = JSON.parse(repaired);
         } catch {
+          // Auto-retry once before showing error
+          if (!window._retrying) {
+            window._retrying = true;
+            return findRestaurants();
+          }
+          window._retrying = false;
           throw new Error('Could not parse restaurant data. Please try again.');
         }
       } else {
@@ -2202,6 +2208,7 @@ Return ${resultCount} restaurants:
     if (!Array.isArray(restaurants) || restaurants.length === 0) {
       throw new Error('No restaurants returned. Please try a different search.');
     }
+    window._retrying = false;
 
     document.getElementById('loading').classList.remove('active');
     renderResults(restaurants, resolvedLocation, isPer, accessNeeds, bizFeatures);
