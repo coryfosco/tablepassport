@@ -2155,7 +2155,7 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
     // Step 1 — Get real restaurants from Google Places (geocoding happens server-side)
     let googlePlaces = [];
     let finalLocation = resolvedLocation;
-    if (zipcode || city) {
+    if (zipcode || city || geoLat) {
       const placesRes = await fetch('/api/places', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2666,6 +2666,9 @@ function rcLink(type) {
 
 /* ══ RESET ══ */
 function handleLocationInput(type) {
+  // Clear stored GPS coords when user types manually
+  window._geoLat = null;
+  window._geoLng = null;
   if (type === 'city' && document.getElementById('city').value.trim()) {
     document.getElementById('zipcode').value = '';
     document.getElementById('state-row').style.display = 'block';
