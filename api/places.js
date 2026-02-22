@@ -6,7 +6,29 @@ module.exports = async function handler(req, res) {
   const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 
   try {
-    const { lat, lng, radius, keyword } = req.body;
+    let { lat, lng, radius, keyword, zipcode, city } = req.body;
+
+    // If no coordinates provided, geocode from zip or city
+    if ((!lat || !lng) && (zipcode || city)) {
+      const query = zipcode
+        ? `postalcode=${encodeURIComponent(zipcode)}&countrycodes=us`
+        : `q=${encodeURIComponent(city)}`;
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?${query}&format=json&limit=1`, {
+        headers: { 'User-Agent': 'TablePassport/1.0' }
+      });
+      const geoData = await geoRes.json();
+      if (geoData && geoData.length > 0) {
+        lat = parseFloat(geoData[0].lat);
+        lng = parseFloat(geoData[0].lon);
+        // Return neighborhood name too
+        const parts = geoData[0].display_name.split(',');
+        var resolvedLocation = parts.slice(0, 2).map(p => p.trim()).join(', ');
+      }
+    }
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Could not determine location coordinates' });
+    }
 
     const params = new URLSearchParams({
       location: `${lat},${lng}`,
@@ -26,9 +48,9 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: searchData.status, message: searchData.error_message });
     }
 
-    // Filter results to strictly enforce radius using Haversine distance
+    // Filter results strictly by radius using Haversine distance
     function haversineDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371000; // meters
+      const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLng = (lng2 - lng1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -37,10 +59,8 @@ module.exports = async function handler(req, res) {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // Filter to only restaurants within the requested radius
     const withinRadius = searchData.results.filter(place => {
-      const dist = haversineDistance(
-        lat, lng,
+      const dist = haversineDistance(lat, lng,
         place.geometry.location.lat,
         place.geometry.location.lng
       );
@@ -49,17 +69,13 @@ module.exports = async function handler(req, res) {
 
     const places = withinRadius.slice(0, 10);
 
-    // Get details for each place
     const detailed = await Promise.all(places.map(async (place) => {
       const detailParams = new URLSearchParams({
         place_id: place.place_id,
         fields: 'name,formatted_address,formatted_phone_number,website,opening_hours,price_level,rating,user_ratings_total,geometry',
         key: GOOGLE_KEY
       });
-
-      const detailRes = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?${detailParams}`
-      );
+      const detailRes = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?${detailParams}`);
       const detailData = await detailRes.json();
       const d = detailData.result || {};
 
@@ -77,7 +93,11 @@ module.exports = async function handler(req, res) {
       };
     }));
 
-    res.status(200).json({ places: detailed, total: withinRadius.length });
+    res.status(200).json({
+      places: detailed,
+      resolvedLocation: resolvedLocation || null,
+      lat, lng
+    });
 
   } catch (err) {
     console.error('Places error:', err);
