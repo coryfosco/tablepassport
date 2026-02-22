@@ -7,10 +7,9 @@ module.exports = async function handler(req, res) {
 
   try {
     let { lat, lng, radius, keyword, zipcode, city } = req.body;
-    let resolvedLocation = city || zipcode || 'Unknown';
+    let resolvedLocation = city || zipcode || 'Current Location';
 
-    // Use direct coordinates if provided (from browser geolocation)
-    // Otherwise geocode from zip or city
+    // Only geocode if we don't already have coordinates (GPS takes priority)
     if (!lat || !lng) {
       const query = zipcode
         ? `postalcode=${encodeURIComponent(zipcode)}&countrycodes=us`
