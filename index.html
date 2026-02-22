@@ -2139,7 +2139,7 @@ Return ${resultCount} restaurants:
 [{"rank":"Top Pick","name":"","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
 
   try {
-    const res = await fetch('/.netlify/functions/chat', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
