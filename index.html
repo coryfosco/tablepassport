@@ -2172,6 +2172,10 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
         const placesData = await placesRes.json();
         googlePlaces = placesData.places || [];
         if (placesData.resolvedLocation) finalLocation = placesData.resolvedLocation;
+        window._debugPlaces = { count: googlePlaces.length, places: googlePlaces.map(p=>p.name), resolvedLocation: finalLocation };
+      } else {
+        const errData = await placesRes.json().catch(()=>({}));
+        window._debugPlaces = { error: errData, status: placesRes.status };
       }
     }
 
@@ -2978,129 +2982,4 @@ const PHRASES = [
     { en:'Could you please bring a bowl of water for my dog?', local:'Könnten Sie bitte eine Wasserschale für meinen Hund bringen?', phonetic:'KER-nen zee BIT-tuh EYE-nuh VAS-ser-sha-luh' },
   ]},
   { lang:'Italian', flag:'🇮🇹', phrases:[
-    { en:'I have a guide dog / service animal.', local:'Ho un cane guida / animale da assistenza.', phonetic:'Oh oon KAH-neh GWEE-dah' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'Il mio cane è un cane guida addestrato e deve restare con me.', phonetic:'Eel MEE-oh KAH-neh eh oon KAH-neh GWEE-dah' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Il vostro ristorante è accessibile ai cani guida?', phonetic:'Eel VOS-troh ree-sto-RAN-teh eh at-ches-EE-bee-leh' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Potrebbe portare una ciotola d\'acqua per il mio cane?', phonetic:'Po-TREH-beh por-TAR-eh OO-nah cho-TO-lah' },
-  ]},
-  { lang:'Portuguese', flag:'🇧🇷', phrases:[
-    { en:'I have a guide dog / service animal.', local:'Tenho um cão-guia / animal de assistência.', phonetic:'TEN-yoo oong KAN-gwee-ah' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'Meu cão é um cão-guia treinado e deve ficar comigo.', phonetic:'Meh-oo KAN eh oong KAN-gwee-ah tray-NAH-doo' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'O seu restaurante é acessível para cães-guia?', phonetic:'Oh sew hes-tow-RAN-chee eh ah-ses-EE-vel' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Poderia trazer uma tigela de água para o meu cão?', phonetic:'Po-deh-REE-ah tra-ZEHR OO-mah tee-ZHEH-lah' },
-  ]},
-  { lang:'Japanese', flag:'🇯🇵', phrases:[
-    { en:'I have a guide dog / service animal.', local:'私は盲導犬/補助犬を連れています。', phonetic:'Watashi wa mō-dō-ken / ho-jo-ken wo tsurete imasu.' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'この犬は訓練された盲導犬です。一緒にいる必要があります。', phonetic:'Kono inu wa kunren sareta mō-dō-ken desu.' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'盲導犬を連れて入店できますか？', phonetic:'Mō-dō-ken wo tsurete nyūten dekimasu ka?' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'犬のために水を一杯いただけますか？', phonetic:'Inu no tame ni mizu wo ippai itadakemasu ka?' },
-  ]},
-  { lang:'Mandarin Chinese', flag:'🇨🇳', phrases:[
-    { en:'I have a guide dog / service animal.', local:'我有一只导盲犬/服务动物。', phonetic:'Wǒ yǒu yī zhī dǎomángquǎn' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'我的狗是经过训练的导盲犬，必须陪在我身边。', phonetic:'Wǒ de gǒu shì jīngguò xùnliàn de dǎomángquǎn' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'您的餐厅允许导盲犬进入吗？', phonetic:'Nín de cāntīng yǔnxǔ dǎomángquǎn jìnrù ma?' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'请给我的狗送一碗水，可以吗？', phonetic:'Qǐng gěi wǒ de gǒu sòng yī wǎn shuǐ' },
-  ]},
-  { lang:'Arabic', flag:'🇸🇦', phrases:[
-    { en:'I have a guide dog / service animal.', local:'لدي كلب إرشادي / حيوان خدمة.', phonetic:'La-day-ya kalb ir-sha-dee / hay-a-wan khid-mah' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'كلبي كلب إرشادي مدرَّب ويجب أن يبقى معي.', phonetic:'Kal-bee kalb ir-sha-dee mu-dar-rab wa-ya-jib an yab-qa ma\'ee' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'هل مطعمكم يسمح بدخول كلاب الإرشاد؟', phonetic:'Hal mat-am-kum yas-mah bi-du-khool ki-lab al-ir-shad?' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'هل يمكنكم إحضار وعاء ماء لكلبي؟', phonetic:'Hal yum-kin-kum ih-dar wa-a\' ma\' li-kal-bee?' },
-  ]},
-  { lang:'Korean', flag:'🇰🇷', phrases:[
-    { en:'I have a guide dog / service animal.', local:'저는 안내견/보조 동물을 데리고 있습니다.', phonetic:'Jeo-neun an-nae-gyeon / bo-jo dong-mul-eul de-ri-go it-sum-ni-da' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'제 개는 훈련된 안내견이며 저와 함께 있어야 합니다.', phonetic:'Je gae-neun hun-ryeon-doen an-nae-gyeon-i-myeo' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'안내견을 데리고 입장할 수 있나요?', phonetic:'An-nae-gyeon-eul de-ri-go ip-jang-hal su it-na-yo?' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'개에게 물 한 그릇 가져다 주실 수 있나요?', phonetic:'Gae-e-ge mul han geu-reut ga-jyeo-da ju-sil su it-na-yo?' },
-  ]},
-  { lang:'Dutch', flag:'🇳🇱', phrases:[
-    { en:'I have a guide dog / service animal.', local:'Ik heb een blindengeleidehond / assistentiehond.', phonetic:'Ik heb eyn BLIN-den-khuh-lay-duh-hont' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'Mijn hond is een getrainde geleidehond en moet bij mij blijven.', phonetic:'Mijn hont is eyn khuh-TRAYN-duh khuh-LAY-duh-hont' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Is uw restaurant toegankelijk voor geleidehonden?', phonetic:'Is oow res-toh-RAHNT too-KHANK-uh-luk vohr' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Kunt u een bakje water voor mijn hond brengen?', phonetic:'Kunt oo eyn BAK-yuh VAH-ter vohr mijn hont' },
-  ]},
-  { lang:'Swedish', flag:'🇸🇪', phrases:[
-    { en:'I have a guide dog / service animal.', local:'Jag har en ledarhund / assistanshund.', phonetic:'Yahg har en LEH-dar-hoond' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'Min hund är en tränad ledarhund och måste stanna hos mig.', phonetic:'Min hoond air en TRAY-nad LEH-dar-hoond' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Är er restaurang tillgänglig för ledarhundar?', phonetic:'Air ehr res-toh-RANG til-YENG-lig fer' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Kan ni ta med en skål vatten till min hund?', phonetic:'Kan nee tah mehd en skohl VAT-ten' },
-  ]},
-  { lang:'Polish', flag:'🇵🇱', phrases:[
-    { en:'I have a guide dog / service animal.', local:'Mam psa przewodnika / zwierzę wspomagające.', phonetic:'Mam psa psheh-VOD-nee-kah' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'Mój pies jest wyszkolonym psem przewodnikiem i musi być ze mną.', phonetic:'Mooy pyes yest vish-KO-lo-nim psem psheh-VOD-nyeh-kem' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Czy pana restauracja jest dostępna dla psów przewodników?', phonetic:'Chih PAH-nah res-tow-RAT-syah yest dos-TEMP-nah' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Czy mógłby pan przynieść miseczkę wody dla mojego psa?', phonetic:'Chih MOOG-wbi pan pshin-YEHSHCH mee-SECH-keh' },
-  ]},
-  { lang:'Russian', flag:'🇷🇺', phrases:[
-    { en:'I have a guide dog / service animal.', local:'У меня собака-поводырь / служебная собака.', phonetic:'Oo men-YA so-BA-ka po-vo-DIRY' },
-    { en:'My dog is a trained guide dog and must stay with me.', local:'Моя собака — обученный поводырь и должна оставаться со мной.', phonetic:'Mo-YA so-BA-ka — o-BOO-chen-niy po-vo-DIRY' },
-    { en:'Is your restaurant accessible for guide dogs?', local:'Разрешён ли вход в ваш ресторан с собакой-поводырём?', phonetic:'Raz-re-SHON lee vkhod v vash res-to-RAN' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Не могли бы вы принести миску воды для моей собаки?', phonetic:'Neh mog-LEE bi vi pri-nes-TEE MIS-koo vo-DI' },
-  ]},
-];
-
-function renderPhrases(filter) {
-  const body = document.getElementById('phrase-body');
-  const f = (filter || '').toLowerCase();
-  let html = '';
-  PHRASES.forEach(langGroup => {
-    const matchingPhrases = langGroup.phrases.filter(p =>
-      !f ||
-      langGroup.lang.toLowerCase().includes(f) ||
-      p.local.toLowerCase().includes(f) ||
-      p.en.toLowerCase().includes(f)
-    );
-    if (!matchingPhrases.length) return;
-    html += `<div class="phrase-lang-section">
-      <div class="phrase-lang-title">${langGroup.flag} ${langGroup.lang}</div>`;
-    matchingPhrases.forEach(p => {
-      const escaped = p.local.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      html += `<div class="phrase-card">
-        <div class="phrase-text">
-          <div class="phrase-english">${p.en}</div>
-          <div class="phrase-local">${p.local}</div>
-          ${p.phonetic ? `<div class="phrase-phonetic">🔊 ${p.phonetic}</div>` : ''}
-        </div>
-        <button class="phrase-copy" onclick="copyPhrase('${escaped}')" aria-label="Copy phrase">Copy</button>
-      </div>`;
-    });
-    html += `</div>`;
-  });
-  body.innerHTML = html || '<p style="padding:2rem;text-align:center;color:var(--mid-gray)">No phrases match your search.</p>';
-}
-
-function filterPhrases(val) { renderPhrases(val); }
-
-function copyPhrase(text) {
-  navigator.clipboard.writeText(text).then(() => announce('Phrase copied!'));
-}
-
-function openPhraseCards() {
-  document.getElementById('phrase-modal').classList.add('open');
-  renderPhrases('');
-  announce('Service animal phrase cards open');
-}
-
-function closePhraseCards() {
-  document.getElementById('phrase-modal').classList.remove('open');
-  announce('Phrase cards closed');
-}
-
-// Close phrase modal on overlay click
-document.getElementById('phrase-modal').addEventListener('click', function(e) {
-  if (e.target === this) closePhraseCards();
-});
-
-// ESC closes all panels
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeA11yDrawer();
-    closePhraseCards();
-    closeMenuModal();
-    document.getElementById('itin-panel').classList.remove('open');
-    document.getElementById('saved-panel').classList.remove('open');
-  }
-});
-</script>
-</body>
-</html>
+    { en:'I have a 
