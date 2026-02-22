@@ -2180,8 +2180,11 @@ IMPORTANT: Keep all text fields concise. whyGo max 2 sentences. proTip max 1 sen
     });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(`API error ${res.status}: ${errData.error?.message || res.statusText}`);
+      const errText = await res.text().catch(() => '');
+      console.error('Full error response:', errText);
+      let errData = {};
+      try { errData = JSON.parse(errText); } catch(e) {}
+      throw new Error(`API error ${res.status}: ${JSON.stringify(errData)}`);
     }
 
     const data = await res.json();
