@@ -2065,7 +2065,6 @@ async function findRestaurants() {
   const isPer       = mode === 'personal';
 
   let resolvedLocation = city || zipcode;
-  let geoLat = null, geoLng = null;
   const locRef      = document.getElementById('loc-ref').value.trim();
   const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
   const transport   = document.getElementById('transport').value;
