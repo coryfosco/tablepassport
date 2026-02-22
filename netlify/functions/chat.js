@@ -7,7 +7,7 @@ exports.handler = async function(event) {
     const body = JSON.parse(event.body);
     
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
+    const timeout = setTimeout(() => controller.abort(), 25000);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
