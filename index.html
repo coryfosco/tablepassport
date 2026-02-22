@@ -2050,35 +2050,8 @@ async function findRestaurants() {
   // Build location instruction — convert zip to neighborhood name for precise searching
   const isPer       = mode === 'personal';
 
-  let resolvedLocation = city;
+  let resolvedLocation = city || zipcode;
   let geoLat = null, geoLng = null;
-  if (zipcode) {
-    try {
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipcode)}&countrycodes=us&format=json&limit=1`);
-      const geoData = await geoRes.json();
-      if (geoData && geoData.length > 0) {
-        const parts = geoData[0].display_name.split(',');
-        const neighborhood = parts.slice(0, 2).map(p => p.trim()).join(', ');
-        resolvedLocation = neighborhood || zipcode;
-        geoLat = parseFloat(geoData[0].lat);
-        geoLng = parseFloat(geoData[0].lon);
-      } else {
-        resolvedLocation = zipcode;
-      }
-    } catch(e) {
-      resolvedLocation = zipcode;
-    }
-  } else if (city) {
-    // For city searches, geocode the city too
-    try {
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`);
-      const geoData = await geoRes.json();
-      if (geoData && geoData.length > 0) {
-        geoLat = parseFloat(geoData[0].lat);
-        geoLng = parseFloat(geoData[0].lon);
-      }
-    } catch(e) {}
-  }
   const locRef      = document.getElementById('loc-ref').value.trim();
   const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
   const transport   = document.getElementById('transport').value;
@@ -2166,15 +2139,16 @@ For each chosen restaurant return:
 IMPORTANT: You MUST copy the address, phone, and website fields exactly from the restaurant list above. Do not leave them empty or null if they exist in the list.`;
 
   try {
-    // Step 1 — Get real restaurants from Google Places
+    // Step 1 — Get real restaurants from Google Places (geocoding happens server-side)
     let googlePlaces = [];
-    if (geoLat && geoLng) {
+    let finalLocation = resolvedLocation;
+    if (zipcode || city) {
       const placesRes = await fetch('/api/places', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          lat: geoLat,
-          lng: geoLng,
+          zipcode: zipcode || null,
+          city: city || null,
           radius: radiusMeters,
           keyword: cuisineKeyword
         })
@@ -2182,6 +2156,7 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
       if (placesRes.ok) {
         const placesData = await placesRes.json();
         googlePlaces = placesData.places || [];
+        if (placesData.resolvedLocation) finalLocation = placesData.resolvedLocation;
       }
     }
 
