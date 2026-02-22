@@ -1339,7 +1339,7 @@ body.reduce-motion *::after {
         <div class="fg">
           <!-- Search by City OR Zip Code -->
           <div class="form-group" style="grid-column:1/-1">
-            <label style="font-weight:600;font-size:.88rem;color:var(--ink)">Search by <span style="color:var(--hot)">City</span> or <span style="color:var(--hot)">Zip / Postal Code</span> <span style="color:var(--hot)" aria-label="required">*</span></label>
+            <label style="font-weight:600;font-size:.88rem;color:var(--ink)">Search by <span style="color:var(--hot)">City</span> or <span style="color:var(--hot)">Zip / Postal Code</span></label>
             <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;margin-top:.5rem">
               <div>
                 <label for="city" style="font-size:.75rem;color:var(--warm-gray);margin-bottom:.3rem;display:block">City</label>
@@ -2047,11 +2047,29 @@ async function findRestaurants() {
     return;
   }
 
-  // Build location instruction — zip code takes priority over city
+  // Build location instruction — convert zip to neighborhood name for precise searching
   const isPer       = mode === 'personal';
-  const locationInstruction = zipcode
-    ? `LOCATION: Zip/postal code ${zipcode}${city ? ' ('+city+')' : ''}. You MUST only return restaurants physically located in zip code ${zipcode}. Do not return any restaurant outside this zip code.`
-    : `LOCATION: ${city}.`;
+
+  let resolvedLocation = city;
+  if (zipcode) {
+    try {
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipcode)}&countrycodes=us&format=json&limit=1`);
+      const geoData = await geoRes.json();
+      if (geoData && geoData.length > 0) {
+        // Extract neighborhood/suburb from display name
+        const parts = geoData[0].display_name.split(',');
+        // Nominatim returns: neighborhood, city, county, state, country
+        const neighborhood = parts.slice(0, 2).map(p => p.trim()).join(', ');
+        resolvedLocation = neighborhood || zipcode;
+      } else {
+        resolvedLocation = zipcode;
+      }
+    } catch(e) {
+      resolvedLocation = zipcode;
+    }
+  }
+
+  const locationInstruction = `LOCATION: ${resolvedLocation}. Return ONLY restaurants in or immediately around ${resolvedLocation}. Do not return restaurants from other neighborhoods.`;
   const locRef      = document.getElementById('loc-ref').value.trim();
   const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
   const transport   = document.getElementById('transport').value;
@@ -2186,7 +2204,7 @@ Return ${resultCount} restaurants:
     }
 
     document.getElementById('loading').classList.remove('active');
-    renderResults(restaurants, city, isPer, accessNeeds, bizFeatures);
+    renderResults(restaurants, resolvedLocation, isPer, accessNeeds, bizFeatures);
     announce(`Found ${restaurants.length} recommendations for ${city}`);
 
   } catch(err) {
