@@ -2169,7 +2169,7 @@ accessInfo: ONLY populate fields that were actually requested — omit all other
 IMPORTANT: Keep all text fields concise. whyGo max 2 sentences. proTip max 1 sentence. mustOrder max 1 sentence. This keeps the response within token limits.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
