@@ -2037,6 +2037,10 @@ async function findRestaurants() {
 
   const isPer       = mode === 'personal';
   const zipcode     = document.getElementById('zipcode').value.trim();
+  // Use zip code as primary search location when provided — much more precise than city name
+  const searchLocation = zipcode
+    ? `zip code ${zipcode} in ${city} — search ONLY within this specific zip code/neighborhood, not the wider city`
+    : city;
   const locRef      = document.getElementById('loc-ref').value.trim();
   const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
   const transport   = document.getElementById('transport').value;
@@ -2099,7 +2103,7 @@ async function findRestaurants() {
 
 ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 
-City:${city} Near:${locRef||'center'} Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} Cuisine:${cuisine.length?cuisine.join(','):'any'} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
+City:${searchLocation} Near:${locRef||'center'} Distance:${distance} Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} Cuisine:${cuisine.length?cuisine.join(','):'any'} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
 
 Return ${resultCount} restaurants:
 [{"rank":"Top Pick","name":"","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
