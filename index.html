@@ -2095,78 +2095,16 @@ async function findRestaurants() {
     ? `PERSONAL/LEISURE MODE — think like a food critic and passionate traveler, not a travel manager. Prize authenticity, storytelling, and discovery. ${foodieFeatures.length ? 'Foodie priorities: '+foodieFeatures.join('; ') : ''}`
     : `BUSINESS TRAVELER MODE — prioritize professionalism, reliability, and practicality. ${bizFeatures.length ? 'Required business features: '+bizFeatures.join(', ') : ''}`;
 
-  const prompt = `You are TablePassport, an elite global dining curator. Respond ONLY in valid JSON — no text before or after, no markdown fences.
+  const prompt = `You are TablePassport. Respond ONLY in valid JSON array, no markdown.
 
-MODE: ${modeContext}
+${isPer ? 'PERSONAL mode' : 'BUSINESS mode'}. ${modeContext}
 
-Search criteria:
-- City: ${city}${zipcode ? ` (zip/postal: ${zipcode})` : ''}
-- Near / starting point: ${locRef || 'city center'}
-- Maximum distance: ${distance}${transport ? ` · Getting there by: ${transport}` : ''}
-- Meal: ${mealTime || 'any'}
-- Time available: ${timeAvail || 'flexible'}
-- Budget: ${budget || 'flexible'}
-- Occasion: ${occasion}
-- Party: ${partySize}
-- Cuisine: ${cuisine.length ? cuisine.join(', ') : 'any — best available'}
-- Dietary: ${dietary.length ? dietary.join(', ') : 'none'}
-- Authenticity: ${sliderDesc}
-- Avoid chains: ${noChains ? 'YES — independent only' : 'no preference'}
-- Extra notes: ${extraNotes || 'none'}
-- Accessibility needed: ${accRequested.length ? accRequested.join('; ') : 'none specified'}
-- Language for response: ${currentLang}
+City: ${city}. Near: ${locRef || 'center'}. Budget: ${budget || 'any'}. Occasion: ${occasion}. Party: ${partySize}. Cuisine: ${cuisine.length ? cuisine.join(', ') : 'any'}. Dietary: ${dietary.length ? dietary.join(', ') : 'none'}. ${noChains ? 'Independent only.' : ''} ${accRequested.length ? 'Accessibility: '+accRequested.join('; ') : ''}
 
-Return exactly ${resultCount} real, well-regarded restaurants. JSON:
-[
-  {
-    "rank": "Top Pick",
-    "name": "Real name",
-    "cuisine": "Type",
-    "priceRange": "$$$",
-    "vibe": "3–5 word vibe",
-    "neighborhood": "Area/neighborhood",
-    "whyGo": "2–3 sentences — why THIS place for THIS specific occasion and traveler. Be vivid and specific.",
-    "mustOrder": "1–2 specific dishes or drinks.",
-    "proTip": "One insider tip that elevates the experience.",
-    "isLocalGem": true,
-    "bizInfo": {
-      "noiseLevel": "quiet|moderate|lively",
-      "privateRoom": "yes|no|unknown",
-      "wifi": "yes|no|unknown",
-      "expenseFriendly": "yes|no|unknown",
-      "dressCode": "casual|smart casual|business casual|formal",
-      "reservationRequired": "yes|recommended|no"
-    },
-    "personalInfo": {
-      "romanticRating": "perfect|good|not ideal",
-      "kidsWelcome": "yes|no|unknown",
-      "bestForFoodieNote": "1 sentence on what makes this genuinely special to a serious eater, or omit",
-      "hiddenDetail": "One truly insider detail — a secret dish, the best seat, a ritual the regulars know"
-    },
-    "accessInfo": {
-      "serviceAnimal": "Detailed only if requested — use hedged language, never definitive legal claims",
-      "menuAccessibility": {
-        "brailleMenu":        "verified|not confirmed|unknown",
-        "largePrint":         "verified|not confirmed|unknown",
-        "digitalScreenReader":"verified|not confirmed|unknown",
-        "qrCode":             "verified|not confirmed|unknown",
-        "audioFromStaff":     "verified|not confirmed|unknown",
-        "appMenuPreVisit":    "verified|not confirmed|unknown — include link if known",
-        "tactileMenu":        "verified|not confirmed|unknown",
-        "highContrastPrint":  "verified|not confirmed|unknown",
-        "overallNote":        "1 sentence summary of menu accessibility status"
-      },
-      "wheelchairAccess": "Detailed only if requested",
-      "lowVision":        "Detailed only if requested",
-      "hearing":          "Detailed only if requested",
-      "sensory":          "Detailed only if requested"
-    }
-  }
-]
-Rank values: Use descriptive labels like "Top Pick", "Local Favorite", "Hidden Gem", "Best for the Occasion", "Most Authentic", "Best Value", "Chef's Choice", "Best Atmosphere", "Most Adventurous", "Best Kept Secret" — assign one unique label per restaurant.
-isLocalGem: true if genuinely independent/local.
-accessInfo: ONLY populate fields that were actually requested — omit all others entirely. Use "Not confirmed — call ahead" if unknown.
-IMPORTANT: Keep all text fields concise. whyGo max 2 sentences. proTip max 1 sentence. mustOrder max 1 sentence. This keeps the response within token limits.`;
+Return exactly ${resultCount} real restaurants as JSON array:
+[{"rank":"Top Pick","name":"Name","cuisine":"Type","priceRange":"$$$","vibe":"short vibe","neighborhood":"Area","whyGo":"Why this place for this occasion.","mustOrder":"Dish name.","proTip":"One tip.","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":"Insider detail."},"accessInfo":{}}]
+
+Ranks: Top Pick, Local Favorite, Hidden Gem, Best Value, Chef's Choice, Best Atmosphere, Most Authentic, Best Kept Secret, Most Adventurous, Best for the Occasion. One unique rank per restaurant. accessInfo only if requested. Keep all text very short.`;
 
   try {
     const res = await fetch('/.netlify/functions/chat', {
