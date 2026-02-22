@@ -2051,7 +2051,7 @@ async function findRestaurants() {
   const isPer       = mode === 'personal';
 
   let resolvedLocation = city;
-  let geoCoords = '';
+  let geoLat = null, geoLng = null;
   if (zipcode) {
     try {
       const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipcode)}&countrycodes=us&format=json&limit=1`);
@@ -2060,18 +2060,25 @@ async function findRestaurants() {
         const parts = geoData[0].display_name.split(',');
         const neighborhood = parts.slice(0, 2).map(p => p.trim()).join(', ');
         resolvedLocation = neighborhood || zipcode;
-        const lat = parseFloat(geoData[0].lat).toFixed(4);
-        const lon = parseFloat(geoData[0].lon).toFixed(4);
-        geoCoords = `Center coordinates: ${lat}, ${lon}.`;
+        geoLat = parseFloat(geoData[0].lat);
+        geoLng = parseFloat(geoData[0].lon);
       } else {
         resolvedLocation = zipcode;
       }
     } catch(e) {
       resolvedLocation = zipcode;
     }
+  } else if (city) {
+    // For city searches, geocode the city too
+    try {
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`);
+      const geoData = await geoRes.json();
+      if (geoData && geoData.length > 0) {
+        geoLat = parseFloat(geoData[0].lat);
+        geoLng = parseFloat(geoData[0].lon);
+      }
+    } catch(e) {}
   }
-
-  const locationInstruction = `LOCATION: ${resolvedLocation}. ${geoCoords} Return ONLY restaurants physically located in ${resolvedLocation}. Every result MUST be within the distance specified below — do not return restaurants outside this area under any circumstances.`;
   const locRef      = document.getElementById('loc-ref').value.trim();
   const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
   const transport   = document.getElementById('transport').value;
@@ -2130,25 +2137,67 @@ async function findRestaurants() {
     ? `PERSONAL/LEISURE MODE — think like a food critic and passionate traveler, not a travel manager. Prize authenticity, storytelling, and discovery. ${foodieFeatures.length ? 'Foodie priorities: '+foodieFeatures.join('; ') : ''}`
     : `BUSINESS TRAVELER MODE — prioritize professionalism, reliability, and practicality. ${bizFeatures.length ? 'Required business features: '+bizFeatures.join(', ') : ''}`;
 
+  // Convert distance chip to meters for Google Places
+  const distanceToMeters = {
+    'within a 5 minute walk (under 0.3 miles)': 400,
+    'within a 10–15 minute walk (under 0.75 miles)': 1200,
+    'within 1–2 miles (short ride or longer walk)': 3200,
+    'within 5 miles': 8000,
+    'anywhere in the city — distance is not a concern': 20000
+  };
+  const radiusMeters = distanceToMeters[distance] || 20000;
+
+  // Build cuisine keyword for Google Places
+  const cuisineKeyword = cuisine.length ? cuisine.join(' ') : '';
+
   const prompt = `You are TablePassport. JSON array only, no markdown, no extra text.
 
-${locationInstruction}
-DISTANCE: ${distance}. This is a hard limit — exclude any restaurant beyond this distance from the location center.
 ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
+Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
 
-Distance:${distance} Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} Cuisine:${cuisine.length?cuisine.join(','):'any'} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
+Here are real restaurants from Google Places near ${resolvedLocation}. Pick the best ${resultCount} that match the criteria above and return them as a JSON array. Use ONLY restaurants from this list — do not invent any:
 
-Return ${resultCount} restaurants:
-[{"rank":"Top Pick","name":"","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
+RESTAURANTS:
+${'{GOOGLE_PLACES_DATA}'}
+
+For each chosen restaurant return:
+[{"rank":"Top Pick","name":"(exact name from list)","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"${resolvedLocation}","address":"(from list)","phone":"(from list)","website":"(from list)","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
 
   try {
+    // Step 1 — Get real restaurants from Google Places
+    let googlePlaces = [];
+    if (geoLat && geoLng) {
+      const placesRes = await fetch('/api/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: geoLat,
+          lng: geoLng,
+          radius: radiusMeters,
+          keyword: cuisineKeyword
+        })
+      });
+      if (placesRes.ok) {
+        const placesData = await placesRes.json();
+        googlePlaces = placesData.places || [];
+      }
+    }
+
+    // Format Google Places data for Claude
+    const placesText = googlePlaces.length > 0
+      ? googlePlaces.map((p, i) => `${i+1}. ${p.name} | ${p.address} | Phone: ${p.phone||'N/A'} | Website: ${p.website||'N/A'} | Rating: ${p.rating||'N/A'} (${p.reviewCount||0} reviews) | Price: ${'$'.repeat(p.priceLevel||2)} | Open now: ${p.openNow===true?'Yes':p.openNow===false?'No':'Unknown'}`).join('\n')
+      : 'No Google Places data available — use your knowledge of restaurants in ' + resolvedLocation;
+
+    const finalPrompt = prompt.replace('{GOOGLE_PLACES_DATA}', placesText);
+
+    // Step 2 — Claude curates and enriches the results
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
-        messages: [{ role:'user', content: prompt }]
+        messages: [{ role:'user', content: finalPrompt }]
       })
     });
 
@@ -2398,6 +2447,12 @@ function renderResults(restaurants, city, isPer, accessNeeds, bizFeatures) {
         <div class="must-order"><div class="must-order-lbl">Must Order</div>${r.mustOrder}</div>
         <div class="pro-tip"><span aria-hidden="true">💡</span><span>${r.proTip}</span></div>
       </div>
+      ${r.address || r.phone || r.website ? `
+      <div style="padding:.6rem 2rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.75rem;font-size:.78rem;color:var(--warm-gray)">
+        ${r.address ? `<span>📍 ${r.address}</span>` : ''}
+        ${r.phone ? `<a href="tel:${r.phone}" style="color:var(--primary);text-decoration:none">📞 ${r.phone}</a>` : ''}
+        ${r.website ? `<a href="${r.website}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none">🌐 Website</a>` : ''}
+      </div>` : ''}
       <div class="r-card-actions">
         <button class="btn-save" onclick="saveRestaurant(this,'${r.name.replace(/'/g,"\\'")}','${r.neighborhood.replace(/'/g,"\\'")}','${r.cuisine}','${mode}')" aria-label="Save ${r.name}">🔖 Save</button>
         <button class="btn-itin-add" id="itin-btn-${i}" onclick="toggleItinItem(this,'${r.name.replace(/'/g,"\\'")}','${r.neighborhood.replace(/'/g,"\\'")}','${r.cuisine}','${r.priceRange}','${mode}')" aria-label="Add ${r.name} to itinerary">+ Itinerary</button>
