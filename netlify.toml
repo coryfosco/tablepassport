@@ -11,3 +11,14 @@
   from = "/api/chat"
   to = "/.netlify/functions/chat"
   status = 200
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions."chat"]
+  timeout = 26
+
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
