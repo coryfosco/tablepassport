@@ -2051,16 +2051,18 @@ async function findRestaurants() {
   const isPer       = mode === 'personal';
 
   let resolvedLocation = city;
+  let geoCoords = '';
   if (zipcode) {
     try {
       const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipcode)}&countrycodes=us&format=json&limit=1`);
       const geoData = await geoRes.json();
       if (geoData && geoData.length > 0) {
-        // Extract neighborhood/suburb from display name
         const parts = geoData[0].display_name.split(',');
-        // Nominatim returns: neighborhood, city, county, state, country
         const neighborhood = parts.slice(0, 2).map(p => p.trim()).join(', ');
         resolvedLocation = neighborhood || zipcode;
+        const lat = parseFloat(geoData[0].lat).toFixed(4);
+        const lon = parseFloat(geoData[0].lon).toFixed(4);
+        geoCoords = `Center coordinates: ${lat}, ${lon}.`;
       } else {
         resolvedLocation = zipcode;
       }
@@ -2069,7 +2071,7 @@ async function findRestaurants() {
     }
   }
 
-  const locationInstruction = `LOCATION: ${resolvedLocation}. Return ONLY restaurants in or immediately around ${resolvedLocation}. Do not return restaurants from other neighborhoods.`;
+  const locationInstruction = `LOCATION: ${resolvedLocation}. ${geoCoords} Return ONLY restaurants physically located in ${resolvedLocation}. Every result MUST be within the distance specified below — do not return restaurants outside this area under any circumstances.`;
   const locRef      = document.getElementById('loc-ref').value.trim();
   const distance    = getChips('distance-chips')[0] || 'anywhere in the city';
   const transport   = document.getElementById('transport').value;
@@ -2131,6 +2133,7 @@ async function findRestaurants() {
   const prompt = `You are TablePassport. JSON array only, no markdown, no extra text.
 
 ${locationInstruction}
+DISTANCE: ${distance}. This is a hard limit — exclude any restaurant beyond this distance from the location center.
 ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 
 Distance:${distance} Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} Cuisine:${cuisine.length?cuisine.join(','):'any'} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
