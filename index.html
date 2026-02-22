@@ -2706,14 +2706,18 @@ function useMyLocation() {
       // Store coords for Places API call
       window._geoLat = latitude;
       window._geoLng = longitude;
-      window._geoJustSet = true; // prevent handleLocationInput from clearing coords
-      // Reverse geocode to get city name for display
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+      window._geoJustSet = true;
+      // Reverse geocode via our server (avoids CORS)
+      fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat: latitude, lng: longitude })
+      })
         .then(r => r.json())
         .then(d => {
-          const city = d.address.city || d.address.town || d.address.village || 'Current Location';
-          const state = d.address.state || '';
-          window._geoJustSet = true; // set again in case .then fires after handleLocationInput
+          const city = d.city || 'Current Location';
+          const state = d.state || '';
+          window._geoJustSet = true;
           document.getElementById('city').value = city;
           document.getElementById('zipcode').value = '';
           if (state) {
@@ -2985,4 +2989,6 @@ const PHRASES = [
     { en:'I have a guide dog / service animal.', local:'Ich habe einen Blindenhund / Assistenzhund.', phonetic:'Ikh HA-buh EYE-nen BLIN-den-hoont' },
     { en:'My dog is a trained guide dog and must stay with me.', local:'Mein Hund ist ein ausgebildeter Blindenhund und muss bei mir bleiben.', phonetic:'Mine hoont ist ein OWS-ge-bil-deh-ter BLIN-den-hoont' },
     { en:'Is your restaurant accessible for guide dogs?', local:'Ist Ihr Restaurant für Blindenhunde zugänglich?', phonetic:'Ist eer res-toh-RAHNT fyur BLIN-den-hoon-duh' },
-    { en:'Could you please bring a bowl of water for my dog?', local:'Könnten Sie bitte eine Wasserschale für meinen Hund bringen?', pho
+    { en:'Could you please bring a bowl of water for my dog?', local:'Könnten Sie bitte eine Wasserschale für meinen Hund bringen?', phonetic:'KER-nen zee BIT-tuh EYE-nuh VAS-ser-sha-luh' },
+  ]},
+  { lang:'Italian', flag
