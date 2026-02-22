@@ -2180,24 +2180,26 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
       ? googlePlaces.map((p, i) => `${i+1}. ${p.name} | ${p.address} | Phone: ${p.phone||'N/A'} | Website: ${p.website||'N/A'} | Rating: ${p.rating||'N/A'} (${p.reviewCount||0} reviews) | Price: ${'$'.repeat(p.priceLevel||2)} | Open now: ${p.openNow===true?'Yes':p.openNow===false?'No':'Unknown'}`).join('\n')
       : null;
 
-    const finalPrompt = placesText
+    const finalPrompt = googlePlaces.length > 0
       ? `You are TablePassport. JSON array only, no markdown, no extra text.
 
-CRITICAL: You MUST only choose restaurants from the numbered list below. Do NOT invent, add, or substitute any restaurant not on this list. If fewer than ${resultCount} restaurants match the criteria, return only the ones that do.
+RULE 1 — MOST IMPORTANT: You may ONLY return restaurants from the RESTAURANT LIST below. Every single result must be from this list. If you return any restaurant not on this list, the response is invalid. Do not add, invent, or substitute any restaurant under any circumstances.
+RULE 2: If fewer than ${resultCount} restaurants on the list match the criteria, return only the ones that do match — never fill the gap with invented restaurants.
+RULE 3: Copy the name, address, phone, and website EXACTLY as shown in the list.
 
 ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
 
-RESTAURANT LIST (use ONLY these):
+RESTAURANT LIST — ONLY USE THESE ${googlePlaces.length} RESTAURANTS:
 ${placesText}
 
-Pick the best ${resultCount} from the list above and return as JSON array. Use the exact name, address, phone and website from the list:
-[{"rank":"Top Pick","name":"(exact name from list)","cuisine":"","priceRange":"(from list price level)","vibe":"","neighborhood":"${resolvedLocation}","address":"(exact address from list)","phone":"(exact phone from list)","website":"(exact website from list)","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`
+Return the best ${resultCount} from the list above as a JSON array:
+[{"rank":"Top Pick","name":"(exact name from list)","cuisine":"","priceRange":"($ $$ $$$ or $$$$)","vibe":"","neighborhood":"${finalLocation}","address":"(exact address from list)","phone":"(exact phone from list)","website":"(exact website from list)","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`
       : `You are TablePassport. JSON array only, no markdown, no extra text.
-LOCATION: ${resolvedLocation}. ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
+LOCATION: ${finalLocation}. ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} Cuisine:${cuisine.length?cuisine.join(','):'any'} ${noChains?'Independent only.':''}
-Return ${resultCount} real restaurants in ${resolvedLocation}:
-[{"rank":"Top Pick","name":"","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"${resolvedLocation}","address":"","phone":"","website":"","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
+Return ${resultCount} real restaurants in ${finalLocation}:
+[{"rank":"Top Pick","name":"","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"${finalLocation}","address":"","phone":"","website":"","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
 
     // Step 2 — Claude curates and enriches the results
     const res = await fetch('/api/chat', {
