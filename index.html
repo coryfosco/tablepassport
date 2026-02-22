@@ -1377,7 +1377,7 @@ body.reduce-motion *::after {
               <button class="chip" data-val="within a 10–15 minute walk (under 0.75 miles)" role="radio" aria-checked="false">🚶 15 min walk</button>
               <button class="chip" data-val="within 1–2 miles (short ride or longer walk)" role="radio" aria-checked="false">🚗 1–2 miles</button>
               <button class="chip" data-val="within 5 miles" role="radio" aria-checked="false">🚗 Within 5 miles</button>
-              <button class="chip selected" data-val="anywhere in the city — distance is not a concern" role="radio" aria-checked="true">🌆 Anywhere in the city</button>
+              <button class="chip selected" data-val="anywhere in the city - distance is not a concern" role="radio" aria-checked="true">🌆 Anywhere in the city</button>
             </div>
           </div>
 
@@ -2120,8 +2120,8 @@ async function findRestaurants() {
   setTimeout(() => document.getElementById('results').scrollIntoView({behavior:'smooth'}), 150);
 
   const modeContext = isPer
-    ? `PERSONAL/LEISURE MODE — think like a food critic and passionate traveler, not a travel manager. Prize authenticity, storytelling, and discovery. ${foodieFeatures.length ? 'Foodie priorities: '+foodieFeatures.join('; ') : ''}`
-    : `BUSINESS TRAVELER MODE — prioritize professionalism, reliability, and practicality. ${bizFeatures.length ? 'Required business features: '+bizFeatures.join(', ') : ''}`;
+    ? `PERSONAL/LEISURE MODE - think like a food critic and passionate traveler, not a travel manager. Prize authenticity, storytelling, and discovery. ${foodieFeatures.length ? 'Foodie priorities: '+foodieFeatures.join('; ') : ''}`
+    : `BUSINESS TRAVELER MODE - prioritize professionalism, reliability, and practicality. ${bizFeatures.length ? 'Required business features: '+bizFeatures.join(', ') : ''}`;
 
   // Convert distance chip to meters for Google Places
   const distanceToMeters = {
@@ -2129,7 +2129,7 @@ async function findRestaurants() {
     'within a 10–15 minute walk (under 0.75 miles)': 1200,
     'within 1–2 miles (short ride or longer walk)': 3200,
     'within 5 miles': 8000,
-    'anywhere in the city — distance is not a concern': 20000
+    'anywhere in the city - distance is not a concern': 20000
   };
   const radiusMeters = distanceToMeters[distance] || 20000;
 
@@ -2141,7 +2141,7 @@ async function findRestaurants() {
 ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
 
-Here are real restaurants from Google Places near ${resolvedLocation}. Pick the best ${resultCount} that match the criteria above and return them as a JSON array. Use ONLY restaurants from this list — do not invent any:
+Here are real restaurants from Google Places near ${resolvedLocation}. Pick the best ${resultCount} that match the criteria above and return them as a JSON array. Use ONLY restaurants from this list - do not invent any:
 
 RESTAURANTS:
 ${'{GOOGLE_PLACES_DATA}'}
@@ -2155,6 +2155,7 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
     // Step 1 — Get real restaurants from Google Places (geocoding happens server-side)
     let googlePlaces = [];
     let finalLocation = resolvedLocation;
+    console.log('DEBUG location values:', { city, zipcode, geoLat, geoLng, radiusMeters });
     if (zipcode || city || geoLat) {
       const placesRes = await fetch('/api/places', {
         method: 'POST',
@@ -2172,6 +2173,10 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
         const placesData = await placesRes.json();
         googlePlaces = placesData.places || [];
         if (placesData.resolvedLocation) finalLocation = placesData.resolvedLocation;
+        window._debugPlaces = { count: googlePlaces.length, places: googlePlaces.map(p=>p.name), resolvedLocation: finalLocation };
+      } else {
+        const errData = await placesRes.json().catch(()=>({}));
+        window._debugPlaces = { error: errData, status: placesRes.status };
       }
     }
 
@@ -2183,14 +2188,14 @@ IMPORTANT: You MUST copy the address, phone, and website fields exactly from the
     const finalPrompt = googlePlaces.length > 0
       ? `You are TablePassport. JSON array only, no markdown, no extra text.
 
-RULE 1 — MOST IMPORTANT: You may ONLY return restaurants from the RESTAURANT LIST below. Every single result must be from this list. If you return any restaurant not on this list, the response is invalid. Do not add, invent, or substitute any restaurant under any circumstances.
-RULE 2: If fewer than ${resultCount} restaurants on the list match the criteria, return only the ones that do match — never fill the gap with invented restaurants.
+RULE 1 - MOST IMPORTANT: You may ONLY return restaurants from the RESTAURANT LIST below. Every single result must be from this list. If you return any restaurant not on this list, the response is invalid. Do not add, invent, or substitute any restaurant under any circumstances.
+RULE 2: If fewer than ${resultCount} restaurants on the list match the criteria, return only the ones that do match - never fill the gap with invented restaurants.
 RULE 3: Copy the name, address, phone, and website EXACTLY as shown in the list.
 
 ${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
 
-RESTAURANT LIST — ONLY USE THESE ${googlePlaces.length} RESTAURANTS:
+RESTAURANT LIST - ONLY USE THESE ${googlePlaces.length} RESTAURANTS:
 ${placesText}
 
 Return the best ${resultCount} from the list above as a JSON array:
@@ -2668,9 +2673,12 @@ function rcLink(type) {
 
 /* ══ RESET ══ */
 function handleLocationInput(type) {
-  // Clear stored GPS coords when user types manually
-  window._geoLat = null;
-  window._geoLng = null;
+  // Only clear GPS coords if user is MANUALLY typing (not if geolocation just set the city)
+  if (!window._geoJustSet) {
+    window._geoLat = null;
+    window._geoLng = null;
+  }
+  window._geoJustSet = false;
   if (type === 'city' && document.getElementById('city').value.trim()) {
     document.getElementById('zipcode').value = '';
     document.getElementById('state-row').style.display = 'block';
@@ -2698,12 +2706,18 @@ function useMyLocation() {
       // Store coords for Places API call
       window._geoLat = latitude;
       window._geoLng = longitude;
-      // Reverse geocode to get city name for display
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+      window._geoJustSet = true;
+      // Reverse geocode via our server (avoids CORS)
+      fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat: latitude, lng: longitude })
+      })
         .then(r => r.json())
         .then(d => {
-          const city = d.address.city || d.address.town || d.address.village || 'Current Location';
-          const state = d.address.state || '';
+          const city = d.city || 'Current Location';
+          const state = d.state || '';
+          window._geoJustSet = true;
           document.getElementById('city').value = city;
           document.getElementById('zipcode').value = '';
           if (state) {
