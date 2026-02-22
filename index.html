@@ -2095,16 +2095,14 @@ async function findRestaurants() {
     ? `PERSONAL/LEISURE MODE — think like a food critic and passionate traveler, not a travel manager. Prize authenticity, storytelling, and discovery. ${foodieFeatures.length ? 'Foodie priorities: '+foodieFeatures.join('; ') : ''}`
     : `BUSINESS TRAVELER MODE — prioritize professionalism, reliability, and practicality. ${bizFeatures.length ? 'Required business features: '+bizFeatures.join(', ') : ''}`;
 
-  const prompt = `You are TablePassport. Respond ONLY in valid JSON array, no markdown.
+  const prompt = `You are TablePassport. JSON array only, no markdown, no extra text.
 
-${isPer ? 'PERSONAL mode' : 'BUSINESS mode'}. ${modeContext}
+${isPer ? 'PERSONAL' : 'BUSINESS'} mode. ${modeContext}
 
-City: ${city}. Near: ${locRef || 'center'}. Budget: ${budget || 'any'}. Occasion: ${occasion}. Party: ${partySize}. Cuisine: ${cuisine.length ? cuisine.join(', ') : 'any'}. Dietary: ${dietary.length ? dietary.join(', ') : 'none'}. ${noChains ? 'Independent only.' : ''} ${accRequested.length ? 'Accessibility: '+accRequested.join('; ') : ''}
+City:${city} Near:${locRef||'center'} Budget:${budget||'any'} Occasion:${occasion} Party:${partySize} Cuisine:${cuisine.length?cuisine.join(','):'any'} ${noChains?'Independent only.':''} ${accRequested.length?'Access:'+accRequested.join(';'):''}
 
-Return exactly ${resultCount} real restaurants as JSON array:
-[{"rank":"Top Pick","name":"Name","cuisine":"Type","priceRange":"$$$","vibe":"short vibe","neighborhood":"Area","whyGo":"Why this place for this occasion.","mustOrder":"Dish name.","proTip":"One tip.","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":"Insider detail."},"accessInfo":{}}]
-
-Ranks: Top Pick, Local Favorite, Hidden Gem, Best Value, Chef's Choice, Best Atmosphere, Most Authentic, Best Kept Secret, Most Adventurous, Best for the Occasion. One unique rank per restaurant. accessInfo only if requested. Keep all text very short.`;
+Return ${resultCount} restaurants:
+[{"rank":"Top Pick","name":"","cuisine":"","priceRange":"$$","vibe":"","neighborhood":"","whyGo":"","mustOrder":"","proTip":"","isLocalGem":true,"bizInfo":{"noiseLevel":"quiet|moderate|lively","privateRoom":"yes|no|unknown","wifi":"yes|no|unknown","expenseFriendly":"yes|no|unknown","dressCode":"casual|smart casual|formal","reservationRequired":"yes|recommended|no"},"personalInfo":{"romanticRating":"perfect|good|not ideal","kidsWelcome":"yes|no|unknown","hiddenDetail":""},"accessInfo":{}}]`;
 
   try {
     const res = await fetch('/.netlify/functions/chat', {
@@ -2112,7 +2110,7 @@ Ranks: Top Pick, Local Favorite, Hidden Gem, Best Value, Chef's Choice, Best Atm
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 1500,
         messages: [{ role:'user', content: prompt }]
       })
     });
